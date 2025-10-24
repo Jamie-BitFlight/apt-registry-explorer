@@ -1,0 +1,75 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "apt-registry-explorer"
+dynamic = ["version"]
+description = "A python utility to validate apt registry endpoints to check for available distributions, channels, and packages"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Jamie-BitFlight"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "requests>=2.31.0",
+    "textual>=0.40.0",
+    "rich>=13.0.0",
+    "click>=8.1.0",
+    "gnupg>=2.3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+apt-registry-explorer = "apt_registry_explorer.cli:main"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "packages/apt-registry-explorer/src/apt_registry_explorer/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["packages/apt-registry-explorer/src/apt_registry_explorer"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/packages/apt-registry-explorer/src",
+    "/tests",
+    "/README.md",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+select = ["E", "F", "W", "I", "N", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=apt_registry_explorer --cov-report=term-missing"
