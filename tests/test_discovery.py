@@ -23,8 +23,8 @@ def test_navigate():
 
 def test_parse_architectures():
     """Test parsing architectures from Release file."""
-    discovery = RepositoryDiscovery("https://example.com")
-    
+    RepositoryDiscovery("https://example.com")
+
     # Mock Release file content
     release_content = """Origin: Example
 Label: Example
@@ -33,12 +33,13 @@ Codename: stable
 Architectures: amd64 arm64 armhf i386
 Components: main contrib non-free
 """
-    
+
     # This would need mocking in real tests, but demonstrates the parsing
     import re
-    arch_pattern = r'^Architectures:\s*(.+)$'
+
+    arch_pattern = r"^Architectures:\s*(.+)$"
     match = re.search(arch_pattern, release_content, re.MULTILINE)
-    
+
     if match:
         archs = match.group(1).strip().split()
         assert "amd64" in archs

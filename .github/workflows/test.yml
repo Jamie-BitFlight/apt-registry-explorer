@@ -36,16 +36,6 @@ jobs:
       run: |
         uv sync
     
-    - name: Run linters
-      run: |
-        uv run ruff check packages/apt-registry-explorer/src
-        uv run ruff format --check packages/apt-registry-explorer/src
-    
-    - name: Run type checkers
-      run: |
-        uv run mypy packages/apt-registry-explorer/src || true
-        uv run basedpyright packages/apt-registry-explorer/src || true
-    
     - name: Run unit tests
       run: |
         uv run pytest tests/ -v -m "not integration"
@@ -58,6 +48,7 @@ jobs:
         uv run apt-registry-explorer query --help
         uv run apt-registry-explorer discover --help
     
+    # Note: Code quality checks (ruff, mypy, basedpyright) run in separate quality.yml workflow
     # Note: Integration tests against real Ubuntu repositories are not run in CI
     # They require network access and can be slow or flaky
     # Run locally with: pytest tests/ -m integration -v

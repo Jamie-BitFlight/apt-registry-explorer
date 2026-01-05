@@ -1,14 +1,6 @@
-"""
-apt-registry-explorer - A utility to explore APT repositories without needing apt-source setup or root access.
-"""
+"""apt-registry-explorer - A utility to explore APT repositories without needing apt-source setup or root access."""
 
-__all__ = [
-    "discovery",
-    "tui",
-    "cli",
-    "sources",
-    "packages",
-]
+__all__ = ["cli", "discovery", "packages", "sources", "tui"]
 
 try:
     from ._version import version as __version__

@@ -1,6 +1,4 @@
-"""
-Interactive discovery module for navigating APT repository URLs.
-"""
+"""Interactive discovery module for navigating APT repository URLs."""
 
 import re
 from urllib.parse import urljoin
@@ -12,33 +10,31 @@ class RepositoryDiscovery:
     """Interactive discovery from partial URL to build apt.sources configuration."""
 
     def __init__(self, base_url: str, timeout: int = 10) -> None:
-        """
-        Initialize repository discovery.
+        """Initialize repository discovery.
 
         Args:
             base_url: Base URL of the APT repository (e.g., https://example.com/{os})
             timeout: Request timeout in seconds
+
         """
         self.base_url = base_url
         self.timeout = timeout
         self.client = httpx.Client(
-            timeout=timeout,
-            headers={"User-Agent": "apt-registry-explorer/1.0"},
+            timeout=timeout, headers={"User-Agent": "apt-registry-explorer/1.0"}
         )
 
     async def list_directory_async(self, url: str) -> list[tuple[str, str]]:
-        """
-        List directories and files at a given URL asynchronously.
+        """List directories and files at a given URL asynchronously.
 
         Args:
             url: URL to list
 
         Returns:
             List of tuples (name, type) where type is 'dir' or 'file'
+
         """
         async with httpx.AsyncClient(
-            timeout=self.timeout,
-            headers={"User-Agent": "apt-registry-explorer/1.0"},
+            timeout=self.timeout, headers={"User-Agent": "apt-registry-explorer/1.0"}
         ) as client:
             try:
                 response = await client.get(url)
@@ -52,9 +48,9 @@ class RepositoryDiscovery:
                 link_pattern = r'<a href="([^"]+)"[^>]*>([^<]+)</a>'
                 matches = re.findall(link_pattern, content, re.IGNORECASE)
 
-                for href, text in matches:
+                for href, _text in matches:
                     # Skip parent directory and absolute URLs
-                    if href in ["../", "..", "/"] or href.startswith(("http", "//")):
+                    if href in {"../", "..", "/"} or href.startswith(("http", "//")):
                         continue
 
                     # Determine if it's a directory
@@ -70,14 +66,14 @@ class RepositoryDiscovery:
                 raise ValueError(f"Failed to list directory {url}: {e}") from e
 
     def list_directory(self, url: str) -> list[tuple[str, str]]:
-        """
-        List directories and files at a given URL (sync version for backwards compatibility).
+        """List directories and files at a given URL (sync version for backwards compatibility).
 
         Args:
             url: URL to list
 
         Returns:
             List of tuples (name, type) where type is 'dir' or 'file'
+
         """
         try:
             response = self.client.get(url)
@@ -91,9 +87,9 @@ class RepositoryDiscovery:
             link_pattern = r'<a href="([^"]+)"[^>]*>([^<]+)</a>'
             matches = re.findall(link_pattern, content, re.IGNORECASE)
 
-            for href, text in matches:
+            for href, _text in matches:
                 # Skip parent directory and absolute URLs
-                if href in ["../", "..", "/"] or href.startswith(("http", "//")):
+                if href in {"../", "..", "/"} or href.startswith(("http", "//")):
                     continue
 
                 # Determine if it's a directory
@@ -109,14 +105,14 @@ class RepositoryDiscovery:
             raise ValueError(f"Failed to list directory {url}: {e}") from e
 
     def navigate(self, path_components: list[str]) -> str:
-        """
-        Navigate to a specific path in the repository.
+        """Navigate to a specific path in the repository.
 
         Args:
             path_components: List of path components to navigate
 
         Returns:
             Final URL
+
         """
         url = self.base_url
         for component in path_components:
@@ -126,32 +122,32 @@ class RepositoryDiscovery:
         return url
 
     def find_release_file(self, url: str) -> str | None:
-        """
-        Find Release or InRelease file in a directory.
+        """Find Release or InRelease file in a directory.
 
         Args:
             url: URL to search
 
         Returns:
             URL of Release/InRelease file if found
+
         """
         items = self.list_directory(url)
-        
+
         for name, item_type in items:
-            if item_type == "file" and name in ["InRelease", "Release", "Release.gpg"]:
+            if item_type == "file" and name in {"InRelease", "Release", "Release.gpg"}:
                 return urljoin(url, name)
-        
+
         return None
 
     def get_architectures(self, release_url: str) -> list[str]:
-        """
-        Extract architectures from Release file.
+        """Extract architectures from Release file.
 
         Args:
             release_url: URL of Release/InRelease file
 
         Returns:
             List of supported architectures
+
         """
         try:
             response = self.client.get(release_url)
@@ -159,24 +155,24 @@ class RepositoryDiscovery:
             content = response.text
 
             # Parse Release file for Architectures field
-            arch_pattern = r'^Architectures:\s*(.+)$'
-            
+            arch_pattern = r"^Architectures:\s*(.+)$"
+
             if match := re.search(arch_pattern, content, re.MULTILINE):
                 return match.group(1).strip().split()
-            
+
             return []
         except httpx.HTTPError:
             return []
 
     def get_components(self, release_url: str) -> list[str]:
-        """
-        Extract components from Release file.
+        """Extract components from Release file.
 
         Args:
             release_url: URL of Release/InRelease file
 
         Returns:
             List of components (e.g., main, contrib, non-free)
+
         """
         try:
             response = self.client.get(release_url)
@@ -184,11 +180,11 @@ class RepositoryDiscovery:
             content = response.text
 
             # Parse Release file for Components field
-            comp_pattern = r'^Components:\s*(.+)$'
-            
+            comp_pattern = r"^Components:\s*(.+)$"
+
             if match := re.search(comp_pattern, content, re.MULTILINE):
                 return match.group(1).strip().split()
-            
+
             return []
         except httpx.HTTPError:
             return []

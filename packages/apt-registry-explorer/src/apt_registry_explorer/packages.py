@@ -1,6 +1,4 @@
-"""
-Package metadata parsing and querying module.
-"""
+"""Package metadata parsing and querying module."""
 
 import gzip
 import json
@@ -51,24 +49,20 @@ class PackageIndex:
     """Parse and query package index (Packages file)."""
 
     def __init__(self, timeout: int = 10) -> None:
-        """
-        Initialize package index.
+        """Initialize package index.
 
         Args:
             timeout: Request timeout in seconds
+
         """
         self.timeout = timeout
         self.client = httpx.Client(
-            timeout=timeout,
-            headers={"User-Agent": "apt-registry-explorer/1.0"},
+            timeout=timeout, headers={"User-Agent": "apt-registry-explorer/1.0"}
         )
         self.packages: list[PackageMetadata] = []
 
-    async def fetch_packages_file_async(
-        self, url: str, architecture: str, component: str
-    ) -> str:
-        """
-        Fetch Packages file from repository asynchronously.
+    async def fetch_packages_file_async(self, url: str, architecture: str, component: str) -> str:
+        """Fetch Packages file from repository asynchronously.
 
         Args:
             url: Base URL of repository
@@ -77,10 +71,10 @@ class PackageIndex:
 
         Returns:
             Content of Packages file
+
         """
         async with httpx.AsyncClient(
-            timeout=self.timeout,
-            headers={"User-Agent": "apt-registry-explorer/1.0"},
+            timeout=self.timeout, headers={"User-Agent": "apt-registry-explorer/1.0"}
         ) as client:
             # Try compressed version first
             packages_gz_url = urljoin(
@@ -90,15 +84,12 @@ class PackageIndex:
             try:
                 response = await client.get(packages_gz_url)
                 response.raise_for_status()
-                content = gzip.decompress(response.content).decode("utf-8")
-                return content
+                return gzip.decompress(response.content).decode("utf-8")
             except httpx.HTTPError:
                 pass
 
             # Try uncompressed version
-            packages_url = urljoin(
-                url, f"dists/stable/{component}/binary-{architecture}/Packages"
-            )
+            packages_url = urljoin(url, f"dists/stable/{component}/binary-{architecture}/Packages")
 
             try:
                 response = await client.get(packages_url)
@@ -108,8 +99,7 @@ class PackageIndex:
                 raise ValueError(f"Failed to fetch Packages file: {e}") from e
 
     def fetch_packages_file(self, url: str, architecture: str, component: str) -> str:
-        """
-        Fetch Packages file from repository (sync version for backwards compatibility).
+        """Fetch Packages file from repository (sync version for backwards compatibility).
 
         Args:
             url: Base URL of repository
@@ -118,6 +108,7 @@ class PackageIndex:
 
         Returns:
             Content of Packages file
+
         """
         # Try compressed version first
         packages_gz_url = urljoin(
@@ -127,15 +118,12 @@ class PackageIndex:
         try:
             response = self.client.get(packages_gz_url)
             response.raise_for_status()
-            content = gzip.decompress(response.content).decode("utf-8")
-            return content
+            return gzip.decompress(response.content).decode("utf-8")
         except httpx.HTTPError:
             pass
 
         # Try uncompressed version
-        packages_url = urljoin(
-            url, f"dists/stable/{component}/binary-{architecture}/Packages"
-        )
+        packages_url = urljoin(url, f"dists/stable/{component}/binary-{architecture}/Packages")
 
         try:
             response = self.client.get(packages_url)
@@ -145,19 +133,19 @@ class PackageIndex:
             raise ValueError(f"Failed to fetch Packages file: {e}") from e
 
     def parse_packages_file(self, content: str) -> list[PackageMetadata]:
-        """
-        Parse Packages file content.
+        """Parse Packages file content.
 
         Args:
             content: Content of Packages file
 
         Returns:
             List of package metadata
+
         """
         packages = []
         current_package = {}
         current_field = None
-        
+
         for line in content.split("\n"):
             # Empty line separates packages
             if not line.strip():
@@ -166,12 +154,12 @@ class PackageIndex:
                     current_package = {}
                     current_field = None
                 continue
-            
+
             # Continuation line (starts with space)
             if line.startswith(" ") and current_field:
                 current_package[current_field] += "\n" + line.strip()
                 continue
-            
+
             # New field
             if ":" in line:
                 field, value = line.split(":", 1)
@@ -179,11 +167,11 @@ class PackageIndex:
                 value = value.strip()
                 current_package[field] = value
                 current_field = field
-        
+
         # Add last package if exists
         if current_package:
             packages.append(self._create_package_metadata(current_package))
-        
+
         return packages
 
     def _create_package_metadata(self, pkg_dict: dict[str, str]) -> PackageMetadata:
@@ -212,13 +200,13 @@ class PackageIndex:
         )
 
     def load_from_url(self, url: str, architecture: str, component: str = "main") -> None:
-        """
-        Load packages from repository URL.
+        """Load packages from repository URL.
 
         Args:
             url: Repository URL
             architecture: Architecture to load
             component: Component to load
+
         """
         content = self.fetch_packages_file(url, architecture, component)
         self.packages = self.parse_packages_file(content)
@@ -233,33 +221,32 @@ class PackageIndex:
         return [pkg for pkg in self.packages if regex.search(pkg.package)]
 
     def filter_by_version(self, version_spec: str) -> list[PackageMetadata]:
-        """
-        Filter packages by version specification.
+        """Filter packages by version specification.
 
         Args:
             version_spec: Version specification (e.g., '>=1.0', '==2.0')
 
         Returns:
             Filtered packages
+
         """
         # Simple version comparison (can be enhanced with packaging library)
         if version_spec.startswith(">="):
             target = version_spec[2:].strip()
             return [pkg for pkg in self.packages if pkg.version >= target]
-        elif version_spec.startswith("<="):
+        if version_spec.startswith("<="):
             target = version_spec[2:].strip()
             return [pkg for pkg in self.packages if pkg.version <= target]
-        elif version_spec.startswith("=="):
+        if version_spec.startswith("=="):
             target = version_spec[2:].strip()
             return [pkg for pkg in self.packages if pkg.version == target]
-        elif version_spec.startswith(">"):
+        if version_spec.startswith(">"):
             target = version_spec[1:].strip()
             return [pkg for pkg in self.packages if pkg.version > target]
-        elif version_spec.startswith("<"):
+        if version_spec.startswith("<"):
             target = version_spec[1:].strip()
             return [pkg for pkg in self.packages if pkg.version < target]
-        else:
-            return [pkg for pkg in self.packages if pkg.version == version_spec]
+        return [pkg for pkg in self.packages if pkg.version == version_spec]
 
     def get_all_packages(self) -> list[PackageMetadata]:
         """Get all loaded packages."""

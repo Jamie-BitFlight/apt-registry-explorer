@@ -1,6 +1,4 @@
-"""
-TUI module with fzf-style package browser.
-"""
+"""TUI module with fzf-style package browser."""
 
 from pathlib import Path
 
@@ -26,22 +24,22 @@ class PackageDetails(Static):
             details = f"""[bold]Package:[/bold] {package.package}
 [bold]Version:[/bold] {package.version}
 [bold]Architecture:[/bold] {package.architecture}
-[bold]Section:[/bold] {package.section or 'N/A'}
-[bold]Priority:[/bold] {package.priority or 'N/A'}
-[bold]Installed Size:[/bold] {package.installed_size or 'N/A'}
+[bold]Section:[/bold] {package.section or "N/A"}
+[bold]Priority:[/bold] {package.priority or "N/A"}
+[bold]Installed Size:[/bold] {package.installed_size or "N/A"}
 
 [bold]Maintainer:[/bold]
-{package.maintainer or 'N/A'}
+{package.maintainer or "N/A"}
 
 [bold]Depends:[/bold]
-{package.depends or 'N/A'}
+{package.depends or "N/A"}
 
 [bold]Description:[/bold]
-{package.description or 'N/A'}
+{package.description or "N/A"}
 
-[bold]Homepage:[/bold] {package.homepage or 'N/A'}
-[bold]Filename:[/bold] {package.filename or 'N/A'}
-[bold]Size:[/bold] {package.size or 'N/A'}
+[bold]Homepage:[/bold] {package.homepage or "N/A"}
+[bold]Filename:[/bold] {package.filename or "N/A"}
+[bold]Size:[/bold] {package.size or "N/A"}
 """
             self.update(details)
         else:
@@ -61,11 +59,11 @@ class PackageBrowserApp(App):
     ]
 
     def __init__(self, packages: list[PackageMetadata], **kwargs) -> None:
-        """
-        Initialize package browser.
+        """Initialize package browser.
 
         Args:
             packages: List of packages to display
+
         """
         super().__init__(**kwargs)
         self.packages = packages
@@ -74,28 +72,28 @@ class PackageBrowserApp(App):
     def compose(self) -> ComposeResult:
         """Create child widgets."""
         yield Header()
-        
+
         with Container(id="search-container"):
             yield Input(placeholder="Search packages...", id="search-input")
-        
+
         with Horizontal(id="content-container"):
             with Vertical(id="packages-container"):
                 yield DataTable(id="packages-table")
-            
+
             with Vertical(id="details-container"):
                 yield PackageDetails(id="package-details")
-        
+
         yield Footer()
 
     def on_mount(self) -> None:
         """Set up the application when mounted."""
         table = self.query_one("#packages-table", DataTable)
         table.add_columns("Package", "Version", "Architecture")
-        
+
         # Populate table
         for pkg in self.packages:
             table.add_row(pkg.package, pkg.version, pkg.architecture)
-        
+
         table.cursor_type = "row"
         table.focus()
 
@@ -103,16 +101,15 @@ class PackageBrowserApp(App):
         """Handle search input changes."""
         if event.input.id == "search-input":
             search_term = event.value.lower()
-            
+
             # Filter packages
             if search_term:
                 self.filtered_packages = [
-                    pkg for pkg in self.packages
-                    if search_term in pkg.package.lower()
+                    pkg for pkg in self.packages if search_term in pkg.package.lower()
                 ]
             else:
                 self.filtered_packages = self.packages
-            
+
             # Update table
             table = self.query_one("#packages-table", DataTable)
             table.clear()
@@ -135,11 +132,11 @@ class PackageBrowserApp(App):
 
 
 def launch_tui(packages: list[PackageMetadata]) -> None:
-    """
-    Launch the TUI application.
+    """Launch the TUI application.
 
     Args:
         packages: List of packages to display
+
     """
     app = PackageBrowserApp(packages)
     app.run()

@@ -9,12 +9,9 @@ from apt_registry_explorer.packages import PackageIndex, PackageMetadata
 def test_package_metadata_creation():
     """Test PackageMetadata creation."""
     pkg = PackageMetadata(
-        package="test-package",
-        version="1.0.0",
-        architecture="amd64",
-        description="Test package",
+        package="test-package", version="1.0.0", architecture="amd64", description="Test package"
     )
-    
+
     assert pkg.package == "test-package"
     assert pkg.version == "1.0.0"
     assert pkg.architecture == "amd64"
@@ -23,12 +20,8 @@ def test_package_metadata_creation():
 
 def test_package_metadata_to_dict():
     """Test converting PackageMetadata to dict."""
-    pkg = PackageMetadata(
-        package="test-package",
-        version="1.0.0",
-        architecture="amd64",
-    )
-    
+    pkg = PackageMetadata(package="test-package", version="1.0.0", architecture="amd64")
+
     pkg_dict = pkg.to_dict()
     assert pkg_dict["package"] == "test-package"
     assert pkg_dict["version"] == "1.0.0"
@@ -37,12 +30,8 @@ def test_package_metadata_to_dict():
 
 def test_package_metadata_to_json():
     """Test converting PackageMetadata to JSON."""
-    pkg = PackageMetadata(
-        package="test-package",
-        version="1.0.0",
-        architecture="amd64",
-    )
-    
+    pkg = PackageMetadata(package="test-package", version="1.0.0", architecture="amd64")
+
     json_str = pkg.to_json()
     assert "test-package" in json_str
     assert "1.0.0" in json_str
@@ -67,10 +56,10 @@ Section: libs
 Description: Another package
 
 """
-    
+
     index = PackageIndex()
     packages = index.parse_packages_file(content)
-    
+
     assert len(packages) == 2
     assert packages[0].package == "test-package"
     assert packages[0].version == "1.0.0"
@@ -87,7 +76,7 @@ def test_filter_by_name():
         PackageMetadata("pkg2", "2.0", "amd64"),
         PackageMetadata("pkg1", "1.1", "arm64"),
     ]
-    
+
     filtered = index.filter_by_name("pkg1")
     assert len(filtered) == 2
     assert all(p.package == "pkg1" for p in filtered)
@@ -101,7 +90,7 @@ def test_filter_by_regex():
         PackageMetadata("python-lib", "2.0", "amd64"),
         PackageMetadata("other-pkg", "1.0", "amd64"),
     ]
-    
+
     filtered = index.filter_by_regex("^python-")
     assert len(filtered) == 2
     assert all(p.package.startswith("python-") for p in filtered)
@@ -115,7 +104,7 @@ def test_filter_by_version():
         PackageMetadata("pkg", "2.0", "amd64"),
         PackageMetadata("pkg", "3.0", "amd64"),
     ]
-    
+
     filtered = index.filter_by_version(">=2.0")
     assert len(filtered) == 2
     assert all(p.version >= "2.0" for p in filtered)
