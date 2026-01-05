@@ -3,35 +3,34 @@ APT sources file builder with GPG/arch/signed-by options.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional
 
 
 @dataclass
 class SourceOptions:
     """Options for apt.sources configuration."""
 
-    signed_by: Optional[str] = None
-    architectures: Optional[List[str]] = None
-    languages: Optional[List[str]] = None
-    targets: Optional[List[str]] = None
+    signed_by: str | None = None
+    architectures: list[str] | None = None
+    languages: list[str] | None = None
+    targets: list[str] | None = None
     trusted: bool = False
 
 
 class SourcesBuilder:
     """Build apt.sources configuration from repository information."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize sources builder."""
-        self.entries = []
+        self.entries: list[dict] = []
 
     def add_source(
         self,
         source_type: str,
         url: str,
         suite: str,
-        components: List[str],
-        options: Optional[SourceOptions] = None,
-    ):
+        components: list[str],
+        options: SourceOptions | None = None,
+    ) -> None:
         """
         Add a source entry.
 
@@ -100,7 +99,7 @@ class SourcesBuilder:
         
         return "\n\n".join(output)
 
-    def build_one_line(self) -> List[str]:
+    def build_one_line(self) -> list[str]:
         """
         Build traditional one-line format sources.
 
@@ -138,7 +137,7 @@ class SourcesBuilder:
         
         return output
 
-    def parse_deb_line(self, line: str) -> dict:
+    def parse_deb_line(self, line: str) -> dict | None:
         """
         Parse a traditional one-line deb source line.
 
@@ -155,13 +154,11 @@ class SourcesBuilder:
             return None
         
         # Parse options block if present (enclosed in [])
-        options = SourceOptions()
-        options_match = None
         import re
+        options = SourceOptions()
         options_pattern = r'\[([^\]]+)\]'
-        match = re.search(options_pattern, line)
         
-        if match:
+        if match := re.search(options_pattern, line):
             options_str = match.group(1)
             # Remove the options block from the line
             line = re.sub(options_pattern, '', line).strip()
@@ -170,12 +167,13 @@ class SourcesBuilder:
             for opt in options_str.split():
                 if "=" in opt:
                     key, value = opt.split("=", 1)
-                    if key == "signed-by":
-                        options.signed_by = value
-                    elif key == "arch":
-                        options.architectures = value.split(",")
-                    elif key == "trusted" and value.lower() == "yes":
-                        options.trusted = True
+                    match key:
+                        case "signed-by":
+                            options.signed_by = value
+                        case "arch":
+                            options.architectures = value.split(",")
+                        case "trusted" if value.lower() == "yes":
+                            options.trusted = True
         
         # Now parse the remaining parts
         parts = line.split()

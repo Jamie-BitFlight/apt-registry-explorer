@@ -2,27 +2,23 @@
 TUI module with fzf-style package browser.
 """
 
-from typing import List, Optional
-
 from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import DataTable, Footer, Header, Input, Static
 
-from .packages import PackageIndex, PackageMetadata
+from .packages import PackageMetadata
 
 
 class PackageDetails(Static):
     """Widget to display package details."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Initialize package details widget."""
         super().__init__(*args, **kwargs)
-        self.current_package: Optional[PackageMetadata] = None
+        self.current_package: PackageMetadata | None = None
 
-    def update_package(self, package: Optional[PackageMetadata]):
+    def update_package(self, package: PackageMetadata | None) -> None:
         """Update displayed package information."""
         self.current_package = package
         if package:
@@ -95,7 +91,7 @@ class PackageBrowserApp(App):
         ("/", "focus_search", "Search"),
     ]
 
-    def __init__(self, packages: List[PackageMetadata], **kwargs):
+    def __init__(self, packages: list[PackageMetadata], **kwargs) -> None:
         """
         Initialize package browser.
 
@@ -169,7 +165,7 @@ class PackageBrowserApp(App):
         search_input.focus()
 
 
-def launch_tui(packages: List[PackageMetadata]):
+def launch_tui(packages: list[PackageMetadata]) -> None:
     """
     Launch the TUI application.
 

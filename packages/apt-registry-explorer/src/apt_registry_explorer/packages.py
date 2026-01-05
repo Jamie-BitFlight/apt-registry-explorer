@@ -6,7 +6,7 @@ import gzip
 import json
 import re
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 from urllib.parse import urljoin
 
 import requests
@@ -19,25 +19,25 @@ class PackageMetadata:
     package: str
     version: str
     architecture: str
-    maintainer: Optional[str] = None
-    installed_size: Optional[str] = None
-    depends: Optional[str] = None
-    recommends: Optional[str] = None
-    suggests: Optional[str] = None
-    conflicts: Optional[str] = None
-    replaces: Optional[str] = None
-    provides: Optional[str] = None
-    section: Optional[str] = None
-    priority: Optional[str] = None
-    homepage: Optional[str] = None
-    description: Optional[str] = None
-    filename: Optional[str] = None
-    size: Optional[str] = None
-    md5sum: Optional[str] = None
-    sha1: Optional[str] = None
-    sha256: Optional[str] = None
+    maintainer: str | None = None
+    installed_size: str | None = None
+    depends: str | None = None
+    recommends: str | None = None
+    suggests: str | None = None
+    conflicts: str | None = None
+    replaces: str | None = None
+    provides: str | None = None
+    section: str | None = None
+    priority: str | None = None
+    homepage: str | None = None
+    description: str | None = None
+    filename: str | None = None
+    size: str | None = None
+    md5sum: str | None = None
+    sha1: str | None = None
+    sha256: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return asdict(self)
 
@@ -49,7 +49,7 @@ class PackageMetadata:
 class PackageIndex:
     """Parse and query package index (Packages file)."""
 
-    def __init__(self, timeout: int = 10):
+    def __init__(self, timeout: int = 10) -> None:
         """
         Initialize package index.
 
@@ -59,7 +59,7 @@ class PackageIndex:
         self.timeout = timeout
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": "apt-registry-explorer/1.0"})
-        self.packages: List[PackageMetadata] = []
+        self.packages: list[PackageMetadata] = []
 
     def fetch_packages_file(self, url: str, architecture: str, component: str) -> str:
         """
@@ -98,7 +98,7 @@ class PackageIndex:
         except requests.RequestException as e:
             raise ValueError(f"Failed to fetch Packages file: {e}")
 
-    def parse_packages_file(self, content: str) -> List[PackageMetadata]:
+    def parse_packages_file(self, content: str) -> list[PackageMetadata]:
         """
         Parse Packages file content.
 
@@ -140,7 +140,7 @@ class PackageIndex:
         
         return packages
 
-    def _create_package_metadata(self, pkg_dict: Dict[str, str]) -> PackageMetadata:
+    def _create_package_metadata(self, pkg_dict: dict[str, str]) -> PackageMetadata:
         """Create PackageMetadata from dictionary."""
         return PackageMetadata(
             package=pkg_dict.get("Package", ""),
@@ -165,7 +165,7 @@ class PackageIndex:
             sha256=pkg_dict.get("SHA256"),
         )
 
-    def load_from_url(self, url: str, architecture: str, component: str = "main"):
+    def load_from_url(self, url: str, architecture: str, component: str = "main") -> None:
         """
         Load packages from repository URL.
 
@@ -177,16 +177,16 @@ class PackageIndex:
         content = self.fetch_packages_file(url, architecture, component)
         self.packages = self.parse_packages_file(content)
 
-    def filter_by_name(self, name: str) -> List[PackageMetadata]:
+    def filter_by_name(self, name: str) -> list[PackageMetadata]:
         """Filter packages by exact name match."""
         return [pkg for pkg in self.packages if pkg.package == name]
 
-    def filter_by_regex(self, pattern: str) -> List[PackageMetadata]:
+    def filter_by_regex(self, pattern: str) -> list[PackageMetadata]:
         """Filter packages by regex pattern."""
         regex = re.compile(pattern)
         return [pkg for pkg in self.packages if regex.search(pkg.package)]
 
-    def filter_by_version(self, version_spec: str) -> List[PackageMetadata]:
+    def filter_by_version(self, version_spec: str) -> list[PackageMetadata]:
         """
         Filter packages by version specification.
 
@@ -197,24 +197,25 @@ class PackageIndex:
             Filtered packages
         """
         # Simple version comparison (can be enhanced with packaging library)
-        if version_spec.startswith(">="):
-            target = version_spec[2:].strip()
-            return [pkg for pkg in self.packages if pkg.version >= target]
-        elif version_spec.startswith("<="):
-            target = version_spec[2:].strip()
-            return [pkg for pkg in self.packages if pkg.version <= target]
-        elif version_spec.startswith("=="):
-            target = version_spec[2:].strip()
-            return [pkg for pkg in self.packages if pkg.version == target]
-        elif version_spec.startswith(">"):
-            target = version_spec[1:].strip()
-            return [pkg for pkg in self.packages if pkg.version > target]
-        elif version_spec.startswith("<"):
-            target = version_spec[1:].strip()
-            return [pkg for pkg in self.packages if pkg.version < target]
-        else:
-            return [pkg for pkg in self.packages if pkg.version == version_spec]
+        match version_spec[:2] if len(version_spec) >= 2 else version_spec:
+            case ">=":
+                target = version_spec[2:].strip()
+                return [pkg for pkg in self.packages if pkg.version >= target]
+            case "<=":
+                target = version_spec[2:].strip()
+                return [pkg for pkg in self.packages if pkg.version <= target]
+            case "==":
+                target = version_spec[2:].strip()
+                return [pkg for pkg in self.packages if pkg.version == target]
+            case _ if version_spec.startswith(">"):
+                target = version_spec[1:].strip()
+                return [pkg for pkg in self.packages if pkg.version > target]
+            case _ if version_spec.startswith("<"):
+                target = version_spec[1:].strip()
+                return [pkg for pkg in self.packages if pkg.version < target]
+            case _:
+                return [pkg for pkg in self.packages if pkg.version == version_spec]
 
-    def get_all_packages(self) -> List[PackageMetadata]:
+    def get_all_packages(self) -> list[PackageMetadata]:
         """Get all loaded packages."""
         return self.packages

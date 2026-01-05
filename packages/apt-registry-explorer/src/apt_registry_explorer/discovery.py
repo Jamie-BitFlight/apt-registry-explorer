@@ -3,8 +3,7 @@ Interactive discovery module for navigating APT repository URLs.
 """
 
 import re
-from typing import List, Optional, Tuple
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 import requests
 
@@ -12,7 +11,7 @@ import requests
 class RepositoryDiscovery:
     """Interactive discovery from partial URL to build apt.sources configuration."""
 
-    def __init__(self, base_url: str, timeout: int = 10):
+    def __init__(self, base_url: str, timeout: int = 10) -> None:
         """
         Initialize repository discovery.
 
@@ -25,7 +24,7 @@ class RepositoryDiscovery:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": "apt-registry-explorer/1.0"})
 
-    def list_directory(self, url: str) -> List[Tuple[str, str]]:
+    def list_directory(self, url: str) -> list[tuple[str, str]]:
         """
         List directories and files at a given URL.
 
@@ -49,9 +48,7 @@ class RepositoryDiscovery:
             
             for href, text in matches:
                 # Skip parent directory and absolute URLs
-                if href in ["../", "..", "/"]:
-                    continue
-                if href.startswith("http") or href.startswith("//"):
+                if href in ["../", "..", "/"] or href.startswith(("http", "//")):
                     continue
                 
                 # Determine if it's a directory
@@ -66,7 +63,7 @@ class RepositoryDiscovery:
         except requests.RequestException as e:
             raise ValueError(f"Failed to list directory {url}: {e}")
 
-    def navigate(self, path_components: List[str]) -> str:
+    def navigate(self, path_components: list[str]) -> str:
         """
         Navigate to a specific path in the repository.
 
@@ -83,7 +80,7 @@ class RepositoryDiscovery:
             url = urljoin(url, component + "/")
         return url
 
-    def find_release_file(self, url: str) -> Optional[str]:
+    def find_release_file(self, url: str) -> str | None:
         """
         Find Release or InRelease file in a directory.
 
@@ -101,7 +98,7 @@ class RepositoryDiscovery:
         
         return None
 
-    def get_architectures(self, release_url: str) -> List[str]:
+    def get_architectures(self, release_url: str) -> list[str]:
         """
         Extract architectures from Release file.
 
@@ -118,17 +115,15 @@ class RepositoryDiscovery:
 
             # Parse Release file for Architectures field
             arch_pattern = r'^Architectures:\s*(.+)$'
-            match = re.search(arch_pattern, content, re.MULTILINE)
             
-            if match:
-                archs = match.group(1).strip().split()
-                return archs
+            if match := re.search(arch_pattern, content, re.MULTILINE):
+                return match.group(1).strip().split()
             
             return []
         except requests.RequestException:
             return []
 
-    def get_components(self, release_url: str) -> List[str]:
+    def get_components(self, release_url: str) -> list[str]:
         """
         Extract components from Release file.
 
@@ -145,11 +140,9 @@ class RepositoryDiscovery:
 
             # Parse Release file for Components field
             comp_pattern = r'^Components:\s*(.+)$'
-            match = re.search(comp_pattern, content, re.MULTILINE)
             
-            if match:
-                components = match.group(1).strip().split()
-                return components
+            if match := re.search(comp_pattern, content, re.MULTILINE):
+                return match.group(1).strip().split()
             
             return []
         except requests.RequestException:
