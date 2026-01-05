@@ -2,7 +2,6 @@
 Tests for packages module.
 """
 
-import pytest
 from apt_registry_explorer.packages import PackageIndex, PackageMetadata
 
 
@@ -72,9 +71,9 @@ def test_filter_by_name():
     """Test filtering packages by name."""
     index = PackageIndex()
     index.packages = [
-        PackageMetadata("pkg1", "1.0", "amd64"),
-        PackageMetadata("pkg2", "2.0", "amd64"),
-        PackageMetadata("pkg1", "1.1", "arm64"),
+        PackageMetadata(package="pkg1", version="1.0", architecture="amd64"),
+        PackageMetadata(package="pkg2", version="2.0", architecture="amd64"),
+        PackageMetadata(package="pkg1", version="1.1", architecture="arm64"),
     ]
 
     filtered = index.filter_by_name("pkg1")
@@ -86,9 +85,9 @@ def test_filter_by_regex():
     """Test filtering packages by regex."""
     index = PackageIndex()
     index.packages = [
-        PackageMetadata("python-package", "1.0", "amd64"),
-        PackageMetadata("python-lib", "2.0", "amd64"),
-        PackageMetadata("other-pkg", "1.0", "amd64"),
+        PackageMetadata(package="python-package", version="1.0", architecture="amd64"),
+        PackageMetadata(package="python-lib", version="2.0", architecture="amd64"),
+        PackageMetadata(package="other-pkg", version="1.0", architecture="amd64"),
     ]
 
     filtered = index.filter_by_regex("^python-")
@@ -100,9 +99,9 @@ def test_filter_by_version():
     """Test filtering packages by version."""
     index = PackageIndex()
     index.packages = [
-        PackageMetadata("pkg", "1.0", "amd64"),
-        PackageMetadata("pkg", "2.0", "amd64"),
-        PackageMetadata("pkg", "3.0", "amd64"),
+        PackageMetadata(package="pkg", version="1.0", architecture="amd64"),
+        PackageMetadata(package="pkg", version="2.0", architecture="amd64"),
+        PackageMetadata(package="pkg", version="3.0", architecture="amd64"),
     ]
 
     filtered = index.filter_by_version(">=2.0")

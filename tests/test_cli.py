@@ -2,7 +2,6 @@
 Tests for CLI module.
 """
 
-import pytest
 from apt_registry_explorer.cli import app
 from typer.testing import CliRunner
 

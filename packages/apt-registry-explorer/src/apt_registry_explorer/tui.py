@@ -1,6 +1,7 @@
 """TUI module with fzf-style package browser."""
 
 from pathlib import Path
+from typing import Any, ClassVar
 
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical
@@ -12,7 +13,7 @@ from .packages import PackageMetadata
 class PackageDetails(Static):
     """Widget to display package details."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize package details widget."""
         super().__init__(*args, **kwargs)
         self.current_package: PackageMetadata | None = None
@@ -52,24 +53,26 @@ class PackageBrowserApp(App):
     # Load CSS from external file
     CSS_PATH = Path(__file__).parent / "tui.tcss"
 
-    BINDINGS = [
+    BINDINGS: ClassVar = [
         ("q", "quit", "Quit"),
         ("f", "focus_search", "Search"),
         ("/", "focus_search", "Search"),
     ]
 
-    def __init__(self, packages: list[PackageMetadata], **kwargs) -> None:
+    def __init__(self, packages: list[PackageMetadata], **kwargs: Any) -> None:
         """Initialize package browser.
 
         Args:
             packages: List of packages to display
+            **kwargs: Additional keyword arguments passed to App
 
         """
         super().__init__(**kwargs)
         self.packages = packages
         self.filtered_packages = packages
 
-    def compose(self) -> ComposeResult:
+    @staticmethod
+    def compose() -> ComposeResult:
         """Create child widgets."""
         yield Header()
 

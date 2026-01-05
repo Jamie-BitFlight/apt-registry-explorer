@@ -1,5 +1,6 @@
 """APT sources file builder with GPG/arch/signed-by options."""
 
+import re
 from dataclasses import dataclass
 
 
@@ -60,14 +61,12 @@ class SourcesBuilder:
         for entry in self.entries:
             lines = []
 
-            # Add Types field
-            lines.append(f"Types: {entry['type']}")
-
-            # Add URIs field
-            lines.append(f"URIs: {entry['url']}")
-
-            # Add Suites field
-            lines.append(f"Suites: {entry['suite']}")
+            # Add Types, URIs, and Suites fields
+            lines.extend([
+                f"Types: {entry['type']}",
+                f"URIs: {entry['url']}",
+                f"Suites: {entry['suite']}",
+            ])
 
             # Add Components field
             components_str = " ".join(entry["components"])
@@ -134,7 +133,8 @@ class SourcesBuilder:
 
         return output
 
-    def parse_deb_line(self, line: str) -> dict | None:
+    @staticmethod
+    def parse_deb_line(line: str) -> dict | None:
         """Parse a traditional one-line deb source line.
 
         Args:
@@ -151,8 +151,6 @@ class SourcesBuilder:
             return None
 
         # Parse options block if present (enclosed in [])
-        import re
-
         options = SourceOptions()
         options_pattern = r"\[([^\]]+)\]"
 
@@ -174,8 +172,9 @@ class SourcesBuilder:
                             options.trusted = True
 
         # Now parse the remaining parts
+        MIN_PARTS = 4  # type: url suite component(s)
         parts = line.split()
-        if len(parts) < 4:
+        if len(parts) < MIN_PARTS:
             return None
 
         source_type = parts[0]

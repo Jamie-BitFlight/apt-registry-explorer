@@ -1,5 +1,7 @@
 """apt-registry-explorer - A utility to explore APT repositories without needing apt-source setup or root access."""
 
+from . import cli, discovery, packages, sources, tui
+
 __all__ = ["cli", "discovery", "packages", "sources", "tui"]
 
 try:

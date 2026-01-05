@@ -1,7 +1,6 @@
 """CLI module for command-line operations."""
 
 import json
-import sys
 from enum import StrEnum
 from typing import Annotated
 
@@ -120,12 +119,12 @@ def query(
 
     except (ValueError, KeyError, OSError) as e:
         typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     except typer.Exit:
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         typer.echo(f"Unexpected error: {e}", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -197,9 +196,9 @@ def discover(
                                     typer.echo(f"    {line}")
                         typer.echo()
 
-    except Exception as e:
+    except (ValueError, OSError, RuntimeError) as e:
         typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 def main() -> None:

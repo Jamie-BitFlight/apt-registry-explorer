@@ -2,7 +2,6 @@
 Tests for sources module.
 """
 
-import pytest
 from apt_registry_explorer.sources import SourceOptions, SourcesBuilder
 
 

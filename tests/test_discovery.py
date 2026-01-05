@@ -2,7 +2,8 @@
 Tests for discovery module.
 """
 
-import pytest
+import re
+
 from apt_registry_explorer.discovery import RepositoryDiscovery
 
 
@@ -35,8 +36,6 @@ Components: main contrib non-free
 """
 
     # This would need mocking in real tests, but demonstrates the parsing
-    import re
-
     arch_pattern = r"^Architectures:\s*(.+)$"
     match = re.search(arch_pattern, release_content, re.MULTILINE)
 

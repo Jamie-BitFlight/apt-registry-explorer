@@ -10,12 +10,96 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  # Quality checks run once on Python 3.12
+  quality:
+    name: Code Quality (Python 3.12)
     runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # For hatch-vcs
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "latest"
+    
+    - name: Install dependencies
+      run: |
+        uv sync
+    
+    - name: Run ruff format check
+      run: |
+        uv run ruff format --check packages/apt-registry-explorer/src tests/
+    
+    - name: Run ruff linter with annotations
+      run: |
+        uv run ruff check packages/apt-registry-explorer/src tests/ --output-format=github
+    
+    - name: Run mypy type checker
+      run: |
+        uv run mypy packages/apt-registry-explorer/src --show-error-codes --pretty
+    
+    - name: Run basedpyright type checker
+      run: |
+        uv run basedpyright packages/apt-registry-explorer/src
+  
+  # Unit tests run on Python 3.12 only
+  unit-tests:
+    name: Unit Tests (Python 3.12)
+    runs-on: ubuntu-latest
+    needs: quality  # Run after quality checks pass
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # For hatch-vcs
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "latest"
+    
+    - name: Install dependencies
+      run: |
+        uv sync
+    
+    - name: Run unit tests
+      run: |
+        # Run unit tests (excluding integration tests)
+        # Integration tests require network access and test against real Ubuntu repos
+        uv run pytest tests/ -v -m "not integration"
+    
+    - name: Validate CLI entry points
+      run: |
+        # Validate that CLI entry points can be invoked
+        # This ONLY tests that the help system loads, NOT actual functionality
+        # NOT VALIDATED: Repository discovery, package fetching, TUI rendering
+        uv run apt-registry-explorer --help
+        uv run apt-registry-explorer query --help
+        uv run apt-registry-explorer discover --help
+  
+  # Integration tests run on multiple Python versions
+  integration-tests:
+    name: Integration Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: unit-tests  # Run after unit tests pass
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
-
+      fail-fast: false  # Continue other versions if one fails
+    
     steps:
     - uses: actions/checkout@v4
       with:
@@ -36,19 +120,9 @@ jobs:
       run: |
         uv sync
     
-    - name: Run unit tests
+    - name: Run integration tests
       run: |
-        uv run pytest tests/ -v -m "not integration"
-    
-    - name: Validate CLI entry points exist
-      run: |
-        # These commands validate that the CLI can be invoked and help loads
-        # They do NOT validate functionality - only that the entry point works
-        uv run apt-registry-explorer --help
-        uv run apt-registry-explorer query --help
-        uv run apt-registry-explorer discover --help
-    
-    # Note: Code quality checks (ruff, mypy, basedpyright) run in separate quality.yml workflow
-    # Note: Integration tests against real Ubuntu repositories are not run in CI
-    # They require network access and can be slow or flaky
-    # Run locally with: pytest tests/ -m integration -v
+        # Run integration tests against real Ubuntu Jammy repository
+        # These tests verify: repository discovery, package fetching, metadata parsing
+        # May be slow due to network access
+        uv run pytest tests/ -v -m "integration" --tb=short

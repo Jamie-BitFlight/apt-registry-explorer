@@ -1,13 +1,12 @@
 """Package metadata parsing and querying module."""
 
 import gzip
-import json
 import re
 from typing import Any
 from urllib.parse import urljoin
 
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class PackageMetadata(BaseModel):
@@ -174,7 +173,8 @@ class PackageIndex:
 
         return packages
 
-    def _create_package_metadata(self, pkg_dict: dict[str, str]) -> PackageMetadata:
+    @staticmethod
+    def _create_package_metadata(pkg_dict: dict[str, str]) -> PackageMetadata:
         """Create PackageMetadata from dictionary."""
         return PackageMetadata(
             package=pkg_dict.get("Package", ""),
