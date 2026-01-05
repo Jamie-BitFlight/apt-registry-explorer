@@ -5,15 +5,14 @@ Package metadata parsing and querying module.
 import gzip
 import json
 import re
-from dataclasses import asdict, dataclass
 from typing import Any
 from urllib.parse import urljoin
 
-import requests
+import httpx
+from pydantic import BaseModel, Field
 
 
-@dataclass
-class PackageMetadata:
+class PackageMetadata(BaseModel):
     """Package metadata similar to apt-cache output."""
 
     package: str
@@ -37,13 +36,15 @@ class PackageMetadata:
     sha1: str | None = None
     sha256: str | None = None
 
+    model_config = {"extra": "allow"}
+
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return asdict(self)
+        return self.model_dump()
 
     def to_json(self) -> str:
         """Convert to JSON string."""
-        return json.dumps(self.to_dict(), indent=2)
+        return self.model_dump_json(indent=2)
 
 
 class PackageIndex:
@@ -57,13 +58,58 @@ class PackageIndex:
             timeout: Request timeout in seconds
         """
         self.timeout = timeout
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": "apt-registry-explorer/1.0"})
+        self.client = httpx.Client(
+            timeout=timeout,
+            headers={"User-Agent": "apt-registry-explorer/1.0"},
+        )
         self.packages: list[PackageMetadata] = []
+
+    async def fetch_packages_file_async(
+        self, url: str, architecture: str, component: str
+    ) -> str:
+        """
+        Fetch Packages file from repository asynchronously.
+
+        Args:
+            url: Base URL of repository
+            architecture: Architecture (e.g., amd64)
+            component: Component (e.g., main)
+
+        Returns:
+            Content of Packages file
+        """
+        async with httpx.AsyncClient(
+            timeout=self.timeout,
+            headers={"User-Agent": "apt-registry-explorer/1.0"},
+        ) as client:
+            # Try compressed version first
+            packages_gz_url = urljoin(
+                url, f"dists/stable/{component}/binary-{architecture}/Packages.gz"
+            )
+
+            try:
+                response = await client.get(packages_gz_url)
+                response.raise_for_status()
+                content = gzip.decompress(response.content).decode("utf-8")
+                return content
+            except httpx.HTTPError:
+                pass
+
+            # Try uncompressed version
+            packages_url = urljoin(
+                url, f"dists/stable/{component}/binary-{architecture}/Packages"
+            )
+
+            try:
+                response = await client.get(packages_url)
+                response.raise_for_status()
+                return response.text
+            except httpx.HTTPError as e:
+                raise ValueError(f"Failed to fetch Packages file: {e}") from e
 
     def fetch_packages_file(self, url: str, architecture: str, component: str) -> str:
         """
-        Fetch Packages file from repository.
+        Fetch Packages file from repository (sync version for backwards compatibility).
 
         Args:
             url: Base URL of repository
@@ -77,26 +123,26 @@ class PackageIndex:
         packages_gz_url = urljoin(
             url, f"dists/stable/{component}/binary-{architecture}/Packages.gz"
         )
-        
+
         try:
-            response = self.session.get(packages_gz_url, timeout=self.timeout)
+            response = self.client.get(packages_gz_url)
             response.raise_for_status()
             content = gzip.decompress(response.content).decode("utf-8")
             return content
-        except requests.RequestException:
+        except httpx.HTTPError:
             pass
-        
+
         # Try uncompressed version
         packages_url = urljoin(
             url, f"dists/stable/{component}/binary-{architecture}/Packages"
         )
-        
+
         try:
-            response = self.session.get(packages_url, timeout=self.timeout)
+            response = self.client.get(packages_url)
             response.raise_for_status()
             return response.text
-        except requests.RequestException as e:
-            raise ValueError(f"Failed to fetch Packages file: {e}")
+        except httpx.HTTPError as e:
+            raise ValueError(f"Failed to fetch Packages file: {e}") from e
 
     def parse_packages_file(self, content: str) -> list[PackageMetadata]:
         """

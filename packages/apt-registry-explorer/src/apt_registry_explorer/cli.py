@@ -112,8 +112,13 @@ def query(
                         typer.echo(f"Description: {pkg.description}")
                     typer.echo()
     
-    except Exception as e:
+    except (ValueError, KeyError, OSError) as e:
         typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(1)
+    except typer.Exit:
+        raise
+    except Exception as e:
+        typer.echo(f"Unexpected error: {e}", err=True)
         raise typer.Exit(1)
 
 

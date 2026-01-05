@@ -5,7 +5,7 @@ Interactive discovery module for navigating APT repository URLs.
 import re
 from urllib.parse import urljoin
 
-import requests
+import httpx
 
 
 class RepositoryDiscovery:
@@ -21,12 +21,57 @@ class RepositoryDiscovery:
         """
         self.base_url = base_url
         self.timeout = timeout
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": "apt-registry-explorer/1.0"})
+        self.client = httpx.Client(
+            timeout=timeout,
+            headers={"User-Agent": "apt-registry-explorer/1.0"},
+        )
+
+    async def list_directory_async(self, url: str) -> list[tuple[str, str]]:
+        """
+        List directories and files at a given URL asynchronously.
+
+        Args:
+            url: URL to list
+
+        Returns:
+            List of tuples (name, type) where type is 'dir' or 'file'
+        """
+        async with httpx.AsyncClient(
+            timeout=self.timeout,
+            headers={"User-Agent": "apt-registry-explorer/1.0"},
+        ) as client:
+            try:
+                response = await client.get(url)
+                response.raise_for_status()
+                content = response.text
+
+                # Parse HTML directory listing (Apache/nginx style)
+                items = []
+
+                # Try to find links in HTML
+                link_pattern = r'<a href="([^"]+)"[^>]*>([^<]+)</a>'
+                matches = re.findall(link_pattern, content, re.IGNORECASE)
+
+                for href, text in matches:
+                    # Skip parent directory and absolute URLs
+                    if href in ["../", "..", "/"] or href.startswith(("http", "//")):
+                        continue
+
+                    # Determine if it's a directory
+                    is_dir = href.endswith("/")
+                    item_name = href.rstrip("/")
+                    item_type = "dir" if is_dir else "file"
+
+                    if item_name:  # Skip empty names
+                        items.append((item_name, item_type))
+
+                return items
+            except httpx.HTTPError as e:
+                raise ValueError(f"Failed to list directory {url}: {e}") from e
 
     def list_directory(self, url: str) -> list[tuple[str, str]]:
         """
-        List directories and files at a given URL.
+        List directories and files at a given URL (sync version for backwards compatibility).
 
         Args:
             url: URL to list
@@ -35,33 +80,33 @@ class RepositoryDiscovery:
             List of tuples (name, type) where type is 'dir' or 'file'
         """
         try:
-            response = self.session.get(url, timeout=self.timeout)
+            response = self.client.get(url)
             response.raise_for_status()
             content = response.text
 
             # Parse HTML directory listing (Apache/nginx style)
             items = []
-            
+
             # Try to find links in HTML
             link_pattern = r'<a href="([^"]+)"[^>]*>([^<]+)</a>'
             matches = re.findall(link_pattern, content, re.IGNORECASE)
-            
+
             for href, text in matches:
                 # Skip parent directory and absolute URLs
                 if href in ["../", "..", "/"] or href.startswith(("http", "//")):
                     continue
-                
+
                 # Determine if it's a directory
                 is_dir = href.endswith("/")
                 item_name = href.rstrip("/")
                 item_type = "dir" if is_dir else "file"
-                
+
                 if item_name:  # Skip empty names
                     items.append((item_name, item_type))
-            
+
             return items
-        except requests.RequestException as e:
-            raise ValueError(f"Failed to list directory {url}: {e}")
+        except httpx.HTTPError as e:
+            raise ValueError(f"Failed to list directory {url}: {e}") from e
 
     def navigate(self, path_components: list[str]) -> str:
         """
@@ -109,7 +154,7 @@ class RepositoryDiscovery:
             List of supported architectures
         """
         try:
-            response = self.session.get(release_url, timeout=self.timeout)
+            response = self.client.get(release_url)
             response.raise_for_status()
             content = response.text
 
@@ -120,7 +165,7 @@ class RepositoryDiscovery:
                 return match.group(1).strip().split()
             
             return []
-        except requests.RequestException:
+        except httpx.HTTPError:
             return []
 
     def get_components(self, release_url: str) -> list[str]:
@@ -134,7 +179,7 @@ class RepositoryDiscovery:
             List of components (e.g., main, contrib, non-free)
         """
         try:
-            response = self.session.get(release_url, timeout=self.timeout)
+            response = self.client.get(release_url)
             response.raise_for_status()
             content = response.text
 
@@ -145,5 +190,5 @@ class RepositoryDiscovery:
                 return match.group(1).strip().split()
             
             return []
-        except requests.RequestException:
+        except httpx.HTTPError:
             return []

@@ -23,10 +23,11 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "requests>=2.31.0",
+    "httpx>=0.27.0",
     "textual>=0.40.0",
     "rich>=13.0.0",
     "typer>=0.21.0",
+    "pydantic>=2.0.0",
     "gnupg>=2.3.1",
 ]
 
@@ -34,8 +35,11 @@ dependencies = [
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
-    "black>=23.0.0",
+    "pytest-asyncio>=0.23.0",
     "ruff>=0.1.0",
+    "mypy>=1.8.0",
+    "basedpyright>=1.10.0",
+    "httpx>=0.27.0",
 ]
 
 [project.scripts]
@@ -57,14 +61,25 @@ include = [
     "/README.md",
 ]
 
-[tool.black]
-line-length = 100
-target-version = ['py311']
-
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-select = ["E", "F", "W", "I", "N", "UP"]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "PIE", "T20", "RET", "SIM", "TID"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.basedpyright]
+pythonVersion = "3.11"
+typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -72,3 +87,4 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--cov=apt_registry_explorer --cov-report=term-missing"
+asyncio_mode = "auto"
