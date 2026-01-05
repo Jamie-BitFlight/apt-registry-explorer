@@ -34,9 +34,6 @@ cd apt-registry-explorer
 
 # Install with uv (recommended)
 uv pip install -e ".[dev]"
-
-# Or sync all dependencies including dev
-uv sync --all-extras
 ```
 
 ### Alternative Installation with pip
