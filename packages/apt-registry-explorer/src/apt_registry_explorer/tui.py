@@ -5,7 +5,7 @@ TUI module with fzf-style package browser.
 from pathlib import Path
 
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import DataTable, Footer, Header, Input, Static
 
 from .packages import PackageMetadata
