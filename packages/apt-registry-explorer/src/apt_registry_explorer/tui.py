@@ -71,8 +71,7 @@ class PackageBrowserApp(App):
         self.packages = packages
         self.filtered_packages = packages
 
-    @staticmethod
-    def compose() -> ComposeResult:
+    def compose(self) -> ComposeResult:  # noqa: PLR6301
         """Create child widgets."""
         yield Header()
 
