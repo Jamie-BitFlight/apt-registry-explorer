@@ -2,18 +2,23 @@
 
 A Python utility to validate and explore APT registry endpoints to check for available distributions, channels, and packages without needing the apt-source set up, or root access.
 
+**Requirements:** Python 3.11 or higher
+
 ## Features
 
 - **Interactive Discovery**: Navigate APT repository URLs interactively to discover distributions, architectures, and components
 - **TUI Package Browser**: Terminal user interface with fzf-style package browsing and split-pane information display
-- **CLI Tools**: Command-line interface for querying packages with JSON output similar to apt-cache
+- **CLI Tools**: Command-line interface built with Typer for querying packages with JSON output similar to apt-cache
 - **APT Sources Builder**: Generate apt.sources configuration files with GPG/arch/signed-by options
+- **Modern Python**: Uses Python 3.11+ features including built-in generics, match-case statements, and pipe unions
 
 ## Installation
 
 ```bash
 pip install apt-registry-explorer
 ```
+
+**Note:** Requires Python 3.11 or higher.
 
 ### Development Installation
 
