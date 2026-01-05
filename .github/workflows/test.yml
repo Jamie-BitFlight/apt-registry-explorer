@@ -25,22 +25,39 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        allow-prereleases: true
     
     - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "latest"
     
     - name: Install dependencies
       run: |
-        uv pip install --system -e ".[dev]"
+        uv sync
     
-    - name: Run tests
+    - name: Run linters
       run: |
-        pytest tests/ -v
+        uv run ruff check packages/apt-registry-explorer/src
+        uv run ruff format --check packages/apt-registry-explorer/src
     
-    - name: Test CLI
+    - name: Run type checkers
       run: |
-        apt-registry-explorer --help
-        apt-registry-explorer query --help
-        apt-registry-explorer discover --help
+        uv run mypy packages/apt-registry-explorer/src || true
+        uv run basedpyright packages/apt-registry-explorer/src || true
+    
+    - name: Run unit tests
+      run: |
+        uv run pytest tests/ -v -m "not integration"
+    
+    - name: Validate CLI entry points exist
+      run: |
+        # These commands validate that the CLI can be invoked and help loads
+        # They do NOT validate functionality - only that the entry point works
+        uv run apt-registry-explorer --help
+        uv run apt-registry-explorer query --help
+        uv run apt-registry-explorer discover --help
+    
+    # Note: Integration tests against real Ubuntu repositories are not run in CI
+    # They require network access and can be slow or flaky
+    # Run locally with: pytest tests/ -m integration -v

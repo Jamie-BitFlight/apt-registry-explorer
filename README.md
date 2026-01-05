@@ -14,7 +14,13 @@ A Python utility to validate and explore APT registry endpoints to check for ava
 
 ## Installation
 
+### For Users
+
 ```bash
+# Using uv (recommended)
+uv tool install apt-registry-explorer
+
+# Or using pip
 pip install apt-registry-explorer
 ```
 
@@ -25,15 +31,21 @@ pip install apt-registry-explorer
 This project uses [uv](https://docs.astral.sh/uv/) from Astral for fast, reliable dependency management.
 
 ```bash
-# Install uv if you haven't already
-pip install uv
+# Install uv (recommended method from official docs)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone the repository
 git clone https://github.com/Jamie-BitFlight/apt-registry-explorer.git
 cd apt-registry-explorer
 
-# Install with uv (recommended)
-uv pip install -e ".[dev]"
+# Sync all dependencies (installs project + dev dependencies)
+uv sync
+
+# Run tests
+uv run pytest
+
+# Run the CLI
+uv run apt-registry-explorer --help
 ```
 
 ### Alternative Installation with pip
@@ -50,10 +62,13 @@ pip install -e ".[dev]"
 ## Dependencies
 
 This project uses modern Python frameworks:
-- **Typer** (>=0.21.0) - For the CLI interface with rich formatting
+- **Typer** (>=0.21.0) - For the CLI interface (includes Rich for formatting)
 - **Textual** (from textualize.io) - For the TUI package browser
-- **Rich** (from textualize.io) - For terminal formatting and output
+- **httpx** (>=0.27.0) - For async HTTP requests
+- **Pydantic** (>=2.0.0) - For data validation and parsing
 - **uv** (from Astral) - For dependency management (dev workflow)
+
+Note: Rich is included with Typer and does not need to be installed separately.
 
 ## Usage
 
@@ -169,19 +184,27 @@ The tool outputs package metadata in JSON format similar to apt-cache:
 ### Running Tests
 
 ```bash
+# With uv
+uv run pytest
+
+# Or with installed pytest
 pytest
 ```
 
-### Code Formatting
+### Code Formatting and Linting
 
 ```bash
-black packages/apt-registry-explorer/src tests
-```
+# Format code with ruff
+ruff format packages/apt-registry-explorer/src tests
 
-### Linting
-
-```bash
+# Lint code
 ruff check packages/apt-registry-explorer/src tests
+
+# Type checking with mypy
+mypy packages/apt-registry-explorer/src
+
+# Type checking with basedpyright
+basedpyright packages/apt-registry-explorer/src
 ```
 
 ## License

@@ -2,9 +2,10 @@
 TUI module with fzf-style package browser.
 """
 
-from rich.console import Console
+from pathlib import Path
+
 from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Horizontal, Vertical
 from textual.widgets import DataTable, Footer, Header, Input, Static
 
 from .packages import PackageMetadata
@@ -50,40 +51,8 @@ class PackageDetails(Static):
 class PackageBrowserApp(App):
     """TUI application for browsing APT packages."""
 
-    CSS = """
-    Screen {
-        layout: vertical;
-    }
-
-    #search-container {
-        height: 3;
-        padding: 1;
-    }
-
-    #content-container {
-        layout: horizontal;
-        height: 1fr;
-    }
-
-    #packages-container {
-        width: 50%;
-        border: solid green;
-    }
-
-    #details-container {
-        width: 50%;
-        border: solid blue;
-        padding: 1;
-    }
-
-    DataTable {
-        height: 1fr;
-    }
-
-    Input {
-        width: 100%;
-    }
-    """
+    # Load CSS from external file
+    CSS_PATH = Path(__file__).parent / "tui.tcss"
 
     BINDINGS = [
         ("q", "quit", "Quit"),
