@@ -197,24 +197,23 @@ class PackageIndex:
             Filtered packages
         """
         # Simple version comparison (can be enhanced with packaging library)
-        match version_spec[:2] if len(version_spec) >= 2 else version_spec:
-            case ">=":
-                target = version_spec[2:].strip()
-                return [pkg for pkg in self.packages if pkg.version >= target]
-            case "<=":
-                target = version_spec[2:].strip()
-                return [pkg for pkg in self.packages if pkg.version <= target]
-            case "==":
-                target = version_spec[2:].strip()
-                return [pkg for pkg in self.packages if pkg.version == target]
-            case _ if version_spec.startswith(">"):
-                target = version_spec[1:].strip()
-                return [pkg for pkg in self.packages if pkg.version > target]
-            case _ if version_spec.startswith("<"):
-                target = version_spec[1:].strip()
-                return [pkg for pkg in self.packages if pkg.version < target]
-            case _:
-                return [pkg for pkg in self.packages if pkg.version == version_spec]
+        if version_spec.startswith(">="):
+            target = version_spec[2:].strip()
+            return [pkg for pkg in self.packages if pkg.version >= target]
+        elif version_spec.startswith("<="):
+            target = version_spec[2:].strip()
+            return [pkg for pkg in self.packages if pkg.version <= target]
+        elif version_spec.startswith("=="):
+            target = version_spec[2:].strip()
+            return [pkg for pkg in self.packages if pkg.version == target]
+        elif version_spec.startswith(">"):
+            target = version_spec[1:].strip()
+            return [pkg for pkg in self.packages if pkg.version > target]
+        elif version_spec.startswith("<"):
+            target = version_spec[1:].strip()
+            return [pkg for pkg in self.packages if pkg.version < target]
+        else:
+            return [pkg for pkg in self.packages if pkg.version == version_spec]
 
     def get_all_packages(self) -> list[PackageMetadata]:
         """Get all loaded packages."""
