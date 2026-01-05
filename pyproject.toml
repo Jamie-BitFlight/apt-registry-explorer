@@ -26,7 +26,7 @@ dependencies = [
     "requests>=2.31.0",
     "textual>=0.40.0",
     "rich>=13.0.0",
-    "typer>=0.9.0",
+    "typer>=0.21.0",
     "gnupg>=2.3.1",
 ]
 
@@ -72,3 +72,11 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--cov=apt_registry_explorer --cov-report=term-missing"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]

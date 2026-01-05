@@ -20,9 +20,14 @@ pip install apt-registry-explorer
 
 **Note:** Requires Python 3.11 or higher.
 
-### Development Installation
+### Development Installation with uv (Recommended)
+
+This project uses [uv](https://docs.astral.sh/uv/) from Astral for fast, reliable dependency management.
 
 ```bash
+# Install uv if you haven't already
+pip install uv
+
 # Clone the repository
 git clone https://github.com/Jamie-BitFlight/apt-registry-explorer.git
 cd apt-registry-explorer
@@ -30,9 +35,28 @@ cd apt-registry-explorer
 # Install with uv (recommended)
 uv pip install -e ".[dev]"
 
-# Or with pip
+# Or sync all dependencies including dev
+uv sync --all-extras
+```
+
+### Alternative Installation with pip
+
+```bash
+# Clone the repository
+git clone https://github.com/Jamie-BitFlight/apt-registry-explorer.git
+cd apt-registry-explorer
+
+# Install with pip
 pip install -e ".[dev]"
 ```
+
+## Dependencies
+
+This project uses modern Python frameworks:
+- **Typer** (>=0.21.0) - For the CLI interface with rich formatting
+- **Textual** (from textualize.io) - For the TUI package browser
+- **Rich** (from textualize.io) - For terminal formatting and output
+- **uv** (from Astral) - For dependency management (dev workflow)
 
 ## Usage
 
