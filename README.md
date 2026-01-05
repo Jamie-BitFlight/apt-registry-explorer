@@ -12,6 +12,14 @@ A Python utility to validate and explore APT registry endpoints to check for ava
 - **APT Sources Builder**: Generate apt.sources configuration files with GPG/arch/signed-by options
 - **Modern Python**: Uses Python 3.11+ features including built-in generics, match-case statements, and pipe unions
 
+## Terminal UI (TUI) Preview
+
+The interactive TUI provides a split-pane interface for browsing packages:
+
+![TUI Screenshot](docs/tui-screenshot.svg)
+
+*Split-pane package browser with real-time search and detailed package information*
+
 ## Installation
 
 ### For Users
@@ -109,19 +117,33 @@ apt-registry-explorer query --source "deb https://example.com/debian stable main
 
 ### TUI Package Browser
 
-Launch the interactive TUI (requires loading packages first):
+Launch the interactive terminal UI to browse packages with keyboard navigation and real-time search:
 
 ```python
 from apt_registry_explorer.packages import PackageIndex
-from apt_registry_explorer.tui import launch_tui
+from apt_registry_explorer.tui import PackageBrowserApp
 
-# Load packages
+# Load packages from repository
 index = PackageIndex()
 index.load_from_url("https://example.com/debian", "amd64", "main")
 
 # Launch TUI
-launch_tui(index.get_all_packages())
+app = PackageBrowserApp(index.get_all_packages())
+app.run()
 ```
+
+**TUI Features:**
+- **Split-pane interface**: Package list on the left, detailed information on the right
+- **Real-time search**: Type `/` or `f` to focus search, filter packages as you type
+- **Keyboard navigation**: Arrow keys to navigate, Enter to select, `q` to quit
+- **Package details**: View dependencies, description, maintainer, homepage, and more
+- **Colorized output**: Syntax-highlighted package information
+
+**Keyboard Shortcuts:**
+- `/` or `f` - Focus search box
+- `↑`/`↓` - Navigate package list
+- `Enter` - Select package to view details
+- `q` - Quit application
 
 ## Command-Line Options
 
