@@ -53,6 +53,7 @@ dev = [
     "basedpyright>=1.33.0",
     "poethepoet>=0.32.0",
     "prek>=0.2.26",
+    "pytest-github-actions-annotate-failures>=0.3.0",
 ]
 
 [project.scripts]
@@ -190,6 +191,7 @@ markers = [
 ]
 
 [tool.coverage.run]
+relative_files = true  # Required for py-cov-action coverage comments
 omit = [
     "**/tests/*",
     "**/__pycache__/*",
