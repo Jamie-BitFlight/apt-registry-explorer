@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+import typer
 from apt_registry_explorer.cli import (
     ArchitectureLister,
     OutputFormat,

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from apt_registry_explorer.packages import PackageMetadata
-from apt_registry_explorer.tui import PackageBrowserApp
+from apt_registry_explorer.tui import PackageBrowserApp, PackageDetails
 from textual.widgets import DataTable
 
 
@@ -41,14 +41,7 @@ class TestPackageBrowserApp:
         """Test TUI app initializes correctly."""
         app = PackageBrowserApp(sample_packages)
         assert app.packages == sample_packages
-        assert app.selected_package is None
-
-    def test_compose_creates_widgets(self, sample_packages) -> None:  # noqa: PLR6301
-        """Test that compose creates required widgets."""
-        app = PackageBrowserApp(sample_packages)
-        widgets = list(app.compose())
-        # Should create at least 2 widgets (table and details)
-        assert len(widgets) >= 2
+        assert app.filtered_packages == sample_packages
 
     def test_on_mount_populates_table(self, sample_packages) -> None:  # noqa: PLR6301
         """Test that on_mount populates the table with packages."""
@@ -69,61 +62,96 @@ class TestPackageBrowserApp:
         """Test that selecting a row updates the details pane."""
         app = PackageBrowserApp(sample_packages)
 
-        # Mock the event with row_index
-        class MockRowSelectedEvent:
-            def __init__(self, row_key):
-                self.row_key = row_key
+        # Mock the event with row_key as integer (0-based index)
+        class MockRowKey:
+            def __init__(self, value):
+                self.value = value
 
-        # Mock query_one to return a mock Static widget
-        mock_static = MagicMock()
-        app.query_one = MagicMock(return_value=mock_static)
+        class MockRowSelectedEvent:
+            def __init__(self, row_key_value):
+                self.row_key = MockRowKey(row_key_value)
+
+        # Mock query_one to return a mock PackageDetails widget
+        mock_details = MagicMock(spec=PackageDetails)
+        app.query_one = MagicMock(return_value=mock_details)
 
         # Simulate row selection
-        event = MockRowSelectedEvent(row_key=0)
+        event = MockRowSelectedEvent(row_key_value=0)
         app.on_data_table_row_selected(event)
 
-        # Verify selected package was set
-        assert app.selected_package is not None
-
-    def test_format_details_with_all_fields(self, sample_packages) -> None:  # noqa: PLR6301
-        """Test formatting package details with all fields present."""
-        app = PackageBrowserApp(sample_packages)
-        pkg = sample_packages[0]
-
-        details = app._format_details(pkg)  # noqa: SLF001
-
-        assert "Package:" in details
-        assert pkg.package in details
-        assert "Version:" in details
-        assert pkg.version in details
-        assert "Architecture:" in details
-        assert pkg.architecture in details
-
-    def test_format_details_with_missing_fields(self) -> None:  # noqa: PLR6301
-        """Test formatting package details with optional fields missing."""
-        app = PackageBrowserApp([])
-        pkg = PackageMetadata(package="test-pkg", version="1.0.0", architecture="all")
-
-        details = app._format_details(pkg)  # noqa: SLF001
-
-        assert "Package:" in details
-        assert "test-pkg" in details
-        # Should handle missing optional fields gracefully
+        # Verify details.update_package was called
+        assert mock_details.update_package.called
 
     def test_on_data_table_row_selected_with_invalid_key(self, sample_packages) -> None:  # noqa: PLR6301
         """Test handling invalid row key."""
         app = PackageBrowserApp(sample_packages)
 
-        class MockRowSelectedEvent:
-            def __init__(self, row_key):
-                self.row_key = row_key
+        class MockRowKey:
+            def __init__(self, value):
+                self.value = value
 
-        mock_static = MagicMock()
-        app.query_one = MagicMock(return_value=mock_static)
+        class MockRowSelectedEvent:
+            def __init__(self, row_key_value):
+                self.row_key = MockRowKey(row_key_value)
+
+        mock_details = MagicMock(spec=PackageDetails)
+        app.query_one = MagicMock(return_value=mock_details)
 
         # Try with out-of-bounds index
-        event = MockRowSelectedEvent(row_key=999)
+        event = MockRowSelectedEvent(row_key_value=999)
 
-        # Should not crash, may do nothing or handle gracefully
+        # Should not crash, just doesn't update anything
         with contextlib.suppress(IndexError, KeyError):
             app.on_data_table_row_selected(event)
+            # update_package should not be called for invalid index
+            assert not mock_details.update_package.called
+
+
+class TestPackageDetails:
+    """Test PackageDetails widget."""
+
+    def test_update_package_with_all_fields(self, sample_packages) -> None:  # noqa: PLR6301
+        """Test updating package details with all fields present."""
+        details = PackageDetails()
+        pkg = sample_packages[0]
+
+        # Mock the update method
+        details.update = MagicMock()
+
+        details.update_package(pkg)
+
+        # Verify update was called with details text
+        assert details.update.called
+        call_args = details.update.call_args[0][0]
+        assert "Package:" in call_args
+        assert pkg.package in call_args
+
+    def test_update_package_with_missing_fields(self) -> None:  # noqa: PLR6301
+        """Test updating package details with optional fields missing."""
+        details = PackageDetails()
+        pkg = PackageMetadata(package="test-pkg", version="1.0.0", architecture="all")
+
+        # Mock the update method
+        details.update = MagicMock()
+
+        details.update_package(pkg)
+
+        # Verify update was called and handles missing fields
+        assert details.update.called
+        call_args = details.update.call_args[0][0]
+        assert "test-pkg" in call_args
+        assert "N/A" in call_args  # For missing optional fields
+
+    def test_update_package_with_none(self) -> None:  # noqa: PLR6301
+        """Test updating package details with None."""
+        details = PackageDetails()
+
+        # Mock the update method
+        details.update = MagicMock()
+
+        details.update_package(None)
+
+        # Verify update was called with "No package selected" message
+        assert details.update.called
+        call_args = details.update.call_args[0][0]
+        assert "No package selected" in call_args

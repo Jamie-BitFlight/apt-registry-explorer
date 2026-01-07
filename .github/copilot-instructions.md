@@ -75,7 +75,7 @@ cd apt-registry-explorer
 uv sync
 ```
 
-### Code Quality (run before committing)
+### Code Quality (ALWAYS run before committing)
 ```bash
 # Format code
 uv run ruff format packages/apt-registry-explorer/src tests/
@@ -90,12 +90,12 @@ uv run mypy packages/apt-registry-explorer/src --show-error-codes --pretty
 uv run basedpyright packages/apt-registry-explorer/src
 ```
 
-### Testing
+### Testing (ALWAYS run before pushing commits)
 ```bash
 # Run unit tests only (fast, no network)
 uv run pytest tests/ -v -m "not integration"
 
-# Run integration tests (slow, requires network)
+# Run integration tests (takes ~5-10 seconds, requires network)
 uv run pytest tests/ -v -m "integration"
 
 # Run all tests with coverage

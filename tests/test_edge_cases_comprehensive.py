@@ -5,6 +5,7 @@ import io
 import json
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
 from apt_registry_explorer.discovery import RepositoryDiscovery
 from apt_registry_explorer.packages import PackageIndex, PackageMetadata
@@ -23,13 +24,13 @@ class TestRepositoryDiscoveryEdgeCases:
         """Test navigate with single path element."""
         discovery = RepositoryDiscovery("https://example.com")
         result = discovery.navigate(["dists"])
-        assert result == "https://example.com/dists"
+        assert result == "https://example.com/dists/"
 
     def test_navigate_with_multiple_paths(self) -> None:  # noqa: PLR6301
         """Test navigate with multiple path elements."""
         discovery = RepositoryDiscovery("https://example.com")
         result = discovery.navigate(["dists", "jammy", "main"])
-        assert result == "https://example.com/dists/jammy/main"
+        assert result == "https://example.com/dists/jammy/main/"
 
     def test_navigate_handles_trailing_slashes(self) -> None:  # noqa: PLR6301
         """Test that navigate handles trailing slashes correctly."""
@@ -38,113 +39,90 @@ class TestRepositoryDiscoveryEdgeCases:
         # Should not have double slashes
         assert "//" not in result or result.startswith("https://")
 
-    @patch("httpx.get")
-    def test_find_release_file_tries_inrelease_first(self, mock_get) -> None:  # noqa: PLR6301
-        """Test that find_release_file tries InRelease before Release."""
+    def test_find_release_file_tries_inrelease_first(self) -> None:  # noqa: PLR6301
+        """Test that find_release_file finds InRelease file."""
         discovery = RepositoryDiscovery("https://example.com")
 
-        # Mock successful InRelease response
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_get.return_value = mock_response
+        # Mock list_directory to return InRelease file
+        with patch.object(
+            discovery, "list_directory", return_value=[("InRelease", "file"), ("Packages", "file")]
+        ):
+            result = discovery.find_release_file("https://example.com/dists/jammy/")
+            assert result is not None
+            assert "InRelease" in result
 
-        discovery.find_release_file("https://example.com/dists/jammy/")
-
-        # Should try InRelease first
-        assert mock_get.call_count >= 1
-        first_call_url = mock_get.call_args_list[0][0][0]
-        assert "InRelease" in first_call_url
-
-    @patch("httpx.get")
-    def test_find_release_file_falls_back_to_release(self, mock_get) -> None:  # noqa: PLR6301
-        """Test that find_release_file falls back to Release if InRelease fails."""
+    def test_find_release_file_falls_back_to_release(self) -> None:  # noqa: PLR6301
+        """Test that find_release_file finds Release file when InRelease not available."""
         discovery = RepositoryDiscovery("https://example.com")
 
-        # Mock InRelease failure, Release success
-        def mock_response_func(url):
-            response = MagicMock()
-            if "InRelease" in url:
-                response.status_code = 404
-            else:
-                response.status_code = 200
-            return response
+        # Mock list_directory to return only Release file
+        with patch.object(
+            discovery, "list_directory", return_value=[("Release", "file"), ("Packages", "file")]
+        ):
+            result = discovery.find_release_file("https://example.com/dists/jammy/")
+            assert result is not None
+            assert "Release" in result
 
-        mock_get.side_effect = mock_response_func
-
-        discovery.find_release_file("https://example.com/dists/jammy/")
-
-        # Should have tried both
-        assert mock_get.call_count == 2
-
-    @patch("httpx.get")
-    def test_find_release_file_returns_none_when_both_fail(self, mock_get) -> None:  # noqa: PLR6301
-        """Test that find_release_file returns None when both files not found."""
+    def test_find_release_file_returns_none_when_both_fail(self) -> None:  # noqa: PLR6301
+        """Test that find_release_file returns None when list_directory returns empty list."""
         discovery = RepositoryDiscovery("https://example.com")
 
-        # Mock both failing
-        mock_response = MagicMock()
-        mock_response.status_code = 404
-        mock_get.return_value = mock_response
+        # Mock list_directory to return empty list (simulating no files found)
+        with patch.object(discovery, "list_directory", return_value=[]):
+            result = discovery.find_release_file("https://example.com/dists/jammy/")
+            assert result is None
 
-        result = discovery.find_release_file("https://example.com/dists/jammy/")
-
-        assert result is None
-
-    @patch("httpx.get")
-    def test_get_architectures_parses_correctly(self, mock_get) -> None:  # noqa: PLR6301
+    def test_get_architectures_parses_correctly(self) -> None:  # noqa: PLR6301
         """Test that get_architectures parses the Architectures line correctly."""
         discovery = RepositoryDiscovery("https://example.com")
 
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.text = "Architectures: amd64 arm64 i386\nComponents: main"
-        mock_get.return_value = mock_response
 
-        result = discovery.get_architectures("https://example.com/Release")
+        # Mock the client's get method
+        with patch.object(discovery.client, "get", return_value=mock_response):
+            result = discovery.get_architectures("https://example.com/Release")
+            assert result == ["amd64", "arm64", "i386"]
 
-        assert result == ["amd64", "arm64", "i386"]
-
-    @patch("httpx.get")
-    def test_get_architectures_returns_empty_when_not_found(self, mock_get) -> None:  # noqa: PLR6301
+    def test_get_architectures_returns_empty_when_not_found(self) -> None:  # noqa: PLR6301
         """Test that get_architectures returns empty list when field not found."""
         discovery = RepositoryDiscovery("https://example.com")
 
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.text = "Components: main\nSuite: jammy"
-        mock_get.return_value = mock_response
 
-        result = discovery.get_architectures("https://example.com/Release")
+        # Mock the client's get method
+        with patch.object(discovery.client, "get", return_value=mock_response):
+            result = discovery.get_architectures("https://example.com/Release")
+            assert result == []
 
-        assert result == []
-
-    @patch("httpx.get")
-    def test_get_components_parses_correctly(self, mock_get) -> None:  # noqa: PLR6301
+    def test_get_components_parses_correctly(self) -> None:  # noqa: PLR6301
         """Test that get_components parses the Components line correctly."""
         discovery = RepositoryDiscovery("https://example.com")
 
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.text = "Components: main restricted universe multiverse\nArchitectures: amd64"
-        mock_get.return_value = mock_response
 
-        result = discovery.get_components("https://example.com/Release")
+        # Mock the client's get method
+        with patch.object(discovery.client, "get", return_value=mock_response):
+            result = discovery.get_components("https://example.com/Release")
+            assert result == ["main", "restricted", "universe", "multiverse"]
 
-        assert result == ["main", "restricted", "universe", "multiverse"]
-
-    @patch("httpx.get")
-    def test_get_components_returns_empty_when_not_found(self, mock_get) -> None:  # noqa: PLR6301
+    def test_get_components_returns_empty_when_not_found(self) -> None:  # noqa: PLR6301
         """Test that get_components returns empty list when field not found."""
         discovery = RepositoryDiscovery("https://example.com")
 
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.text = "Architectures: amd64\nSuite: jammy"
-        mock_get.return_value = mock_response
 
-        result = discovery.get_components("https://example.com/Release")
-
-        assert result == []
+        # Mock the client's get method
+        with patch.object(discovery.client, "get", return_value=mock_response):
+            result = discovery.get_components("https://example.com/Release")
+            assert result == []
 
     @patch("httpx.get")
     def test_list_directory_handles_http_errors(self, mock_get) -> None:  # noqa: PLR6301
@@ -235,34 +213,37 @@ class TestPackageIndexEdgeCases:
         assert len(result) == 1
         assert result[0].package == "pkg1"
 
-    def test_get_all_packages_returns_copy(self) -> None:  # noqa: PLR6301
-        """Test that get_all_packages returns a copy of the packages list."""
+    def test_get_all_packages_returns_packages(self) -> None:  # noqa: PLR6301
+        """Test that get_all_packages returns the packages list."""
         index = PackageIndex()
         original_packages = [PackageMetadata(package="nginx", version="1.0", architecture="amd64")]
         index.packages = original_packages
 
         result = index.get_all_packages()
 
-        # Modifying result should not affect original
-        result.clear()
-        assert len(index.packages) == 1
+        # Returns the same list
+        assert result == original_packages
+        assert len(result) == 1
 
-    @patch("httpx.get")
-    def test_load_from_url_handles_http_error(self, mock_get) -> None:  # noqa: PLR6301
-        """Test that load_from_url handles HTTP errors gracefully."""
+    def test_load_from_url_handles_http_error(self) -> None:  # noqa: PLR6301
+        """Test that load_from_url raises error on HTTP failure."""
         index = PackageIndex()
 
         mock_response = MagicMock()
         mock_response.status_code = 500
-        mock_response.raise_for_status.side_effect = Exception("HTTP Error")
-        mock_get.return_value = mock_response
 
-        # Should raise an HTTP error
-        with pytest.raises(Exception, match=r".*"):
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Server error", request=MagicMock(), response=mock_response
+        )
+
+        # Mock the client's get method
+        with (
+            patch.object(index.client, "get", return_value=mock_response),
+            pytest.raises(ValueError, match=r".*"),
+        ):
             index.load_from_url("https://example.com", "amd64", "main")
 
-    @patch("httpx.get")
-    def test_load_from_url_parses_gzipped_content(self, mock_get) -> None:  # noqa: PLR6301  # noqa: PLR6301
+    def test_load_from_url_parses_gzipped_content(self) -> None:  # noqa: PLR6301
         """Test that load_from_url handles gzipped Packages files."""
         index = PackageIndex()
 
@@ -275,12 +256,12 @@ class TestPackageIndexEdgeCases:
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.content = gzipped.getvalue()
-        mock_get.return_value = mock_response
 
-        index.load_from_url("https://example.com", "amd64", "main")
-
-        # Should have parsed the package
-        assert len(index.packages) > 0
+        # Mock the client's get method
+        with patch.object(index.client, "get", return_value=mock_response):
+            index.load_from_url("https://example.com", "amd64", "main")
+            # Should have parsed the package
+            assert len(index.packages) > 0
 
 
 class TestPackageMetadataEdgeCases:

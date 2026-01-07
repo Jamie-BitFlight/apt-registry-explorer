@@ -111,9 +111,7 @@ class PackageIndex:
 
         """
         # Try compressed version first
-        packages_gz_url = urljoin(
-            url, f"dists/stable/{component}/binary-{architecture}/Packages.gz"
-        )
+        packages_gz_url = urljoin(url, f"dists/jammy/{component}/binary-{architecture}/Packages.gz")
 
         try:
             response = self.client.get(packages_gz_url)
@@ -123,7 +121,7 @@ class PackageIndex:
             pass
 
         # Try uncompressed version
-        packages_url = urljoin(url, f"dists/stable/{component}/binary-{architecture}/Packages")
+        packages_url = urljoin(url, f"dists/jammy/{component}/binary-{architecture}/Packages")
 
         try:
             response = self.client.get(packages_url)
