@@ -33,7 +33,7 @@ class ParsedDebLine(BaseModel):
     url: str
     suite: str
     components: list[str]
-    options: SourceOptions
+    options: SourceOptions | None = None
 
 
 class SourcesBuilder:
