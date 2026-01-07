@@ -243,13 +243,24 @@ The `.pre-commit-config.yaml` configures these hooks that run on every commit:
 5. Write unit tests mocking dependencies
 6. Update README with command usage
 
+**Adding dependencies (IMPORTANT):**
+
+Always use `uv add` instead of manually editing `pyproject.toml`:
+
+```bash
+uv add <package>           # Runtime dependency
+uv add --dev <package>     # Dev dependency
+uv add --dev "pkg>=1.0"    # With version constraint
+```
+
+Why: `uv add` resolves versions, updates `pyproject.toml` AND `uv.lock`, and installs immediately. Manual edits bypass version resolution.
+
 **Updating dependencies:**
 
-1. Check latest versions on respective release pages
-2. Update pyproject.toml dependencies section
-3. Run `uv lock` to update lockfile
-4. Run `uv run poe all` to verify compatibility
-5. Update workflows if action versions changed
+1. Run `uv lock --upgrade` to update all deps
+2. Or: `uv add <package>@latest` for specific package
+3. Run `uv run poe all` to verify compatibility
+4. Update workflows if action versions changed
 
 **Improving test coverage:**
 

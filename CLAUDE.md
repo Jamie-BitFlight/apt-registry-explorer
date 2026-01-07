@@ -350,11 +350,42 @@ def test_real_api() -> None:
     assert result is not None
 ```
 
+### Adding Dependencies
+
+**IMPORTANT**: Always use `uv add` instead of manually editing `pyproject.toml`:
+
+```bash
+# Add a runtime dependency
+uv add <package>
+
+# Add a dev dependency (testing, linting, etc.)
+uv add --dev <package>
+
+# Add with specific version bounds
+uv add --bounds lower <package>  # >=X.Y.Z (default)
+uv add --bounds exact <package>  # ==X.Y.Z
+uv add --bounds minor <package>  # >=X.Y.Z,<X.(Y+1).0
+
+# Examples
+uv add httpx                     # Runtime dependency
+uv add --dev pytest-xdist        # Dev dependency
+uv add --dev "ruff>=0.9.0"       # With version constraint
+```
+
+Why use `uv add`:
+
+- Automatically resolves compatible versions
+- Updates both `pyproject.toml` and `uv.lock`
+- Installs the package immediately
+- Avoids version conflicts
+
+**DON'T** manually edit `pyproject.toml` to add dependencies - this bypasses version resolution and may cause conflicts.
+
 ### Updating Dependencies
 
-1. Update versions in `pyproject.toml`
-2. Run `uv lock` to update lockfile
-3. Run full test suite: `uv run pytest`
+1. Run `uv lock --upgrade` to update all dependencies
+2. Or update specific package: `uv add <package>@latest`
+3. Run full test suite: `uv run poe all`
 4. Update workflow action versions if needed
 
 ## Test Fixtures
