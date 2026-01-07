@@ -118,7 +118,7 @@ class TestSourceParser:
 
     def test_parse_invalid_deb_line_exits(self) -> None:  # noqa: PLR6301
         """Test that invalid deb line raises Exit."""
-        with pytest.raises(SystemExit):
+        with pytest.raises(typer.Exit):
             SourceParser.parse_source("deb invalid")
 
 
@@ -155,7 +155,7 @@ class TestArchitectureLister:
         """Test that missing release file causes exit."""
         mock_discovery.find_release_file.return_value = None
 
-        with pytest.raises(SystemExit):
+        with pytest.raises(typer.Exit):
             ArchitectureLister.list_architectures("https://example.com", "jammy", OutputFormat.JSON)
 
 
