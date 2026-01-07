@@ -71,7 +71,7 @@ class PackageBrowserApp(App[None]):
         self.packages = packages
         self.filtered_packages = packages
 
-    def compose(self) -> ComposeResult:
+    def compose(self) -> ComposeResult:  # noqa: PLR6301
         """Create child widgets.
 
         Note: This method is required by the Textual framework and must remain

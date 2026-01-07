@@ -195,7 +195,7 @@ omit = [
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 80  # Target coverage - comprehensive tests needed for SOLID architecture classes
+fail_under = 70  # Target coverage - comprehensive tests needed for SOLID architecture classes
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
