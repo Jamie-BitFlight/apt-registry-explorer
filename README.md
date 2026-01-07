@@ -18,7 +18,7 @@ The interactive TUI provides a split-pane interface for browsing packages:
 
 ![TUI Screenshot](docs/tui-screenshot.svg)
 
-*Split-pane package browser with real-time search and detailed package information*
+_Split-pane package browser with real-time search and detailed package information_
 
 ## Installation
 
@@ -70,6 +70,7 @@ pip install -e ".[dev]"
 ## Dependencies
 
 This project uses modern Python frameworks:
+
 - **Typer** (>=0.21.0) - For the CLI interface (includes Rich for formatting)
 - **Textual** (from textualize.io) - For the TUI package browser
 - **httpx** (>=0.27.0) - For async HTTP requests
@@ -89,6 +90,7 @@ apt-registry-explorer discover https://example.com/debian
 ```
 
 This will:
+
 - List available directories
 - Find distribution suites
 - Display architectures and components
@@ -133,6 +135,7 @@ app.run()
 ```
 
 **TUI Features:**
+
 - **Split-pane interface**: Package list on the left, detailed information on the right
 - **Real-time search**: Type `/` or `f` to focus search, filter packages as you type
 - **Keyboard navigation**: Arrow keys to navigate, Enter to select, `q` to quit
@@ -140,6 +143,7 @@ app.run()
 - **Colorized output**: Syntax-highlighted package information
 
 **Keyboard Shortcuts:**
+
 - `/` or `f` - Focus search box
 - `↑`/`↓` - Navigate package list
 - `Enter` - Select package to view details

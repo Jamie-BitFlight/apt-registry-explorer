@@ -41,16 +41,19 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest>=8.4.2",
-    "pytest-cov>=6.0.0",
-    "pytest-asyncio>=0.24.0",
-    "pytest-mock>=3.14.0",
-    "pytest-xdist>=3.8.0",
-    "ruff>=0.9.4",
-    "hatchling>=1.14.0",
+    "basedpyright>=1.37.0",
     "hatch-vcs>=0.5.0",
-    "mypy>=1.18.2",
-    "basedpyright>=1.33.0",
+    "hatchling>=1.28.0",
+    "mypy>=1.19.1",
+    "poethepoet>=0.40.0",
+    "prek>=0.2.26",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.0.0",
+    "pytest-github-actions-annotate-failures>=0.3.0",
+    "pytest-mock>=3.15.1",
+    "pytest-xdist>=3.8.0",
+    "ruff>=0.14.10",
 ]
 
 [project.scripts]
@@ -188,6 +191,7 @@ markers = [
 ]
 
 [tool.coverage.run]
+relative_files = true  # Required for py-cov-action coverage comments
 omit = [
     "**/tests/*",
     "**/__pycache__/*",
@@ -220,3 +224,43 @@ source = "vcs"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "packages/apt-registry-explorer/src/apt_registry_explorer/_version.py"
+
+# =============================================================================
+# Poe the Poet - Task Runner Configuration
+# =============================================================================
+[tool.poe]
+poetry_command = ""
+
+[tool.poe.tasks]
+# Formatting
+format = { cmd = "ruff format packages/apt-registry-explorer/src tests/", help = "Format code with ruff" }
+format-check = { cmd = "ruff format --check packages/apt-registry-explorer/src tests/", help = "Check code formatting" }
+
+# Linting
+lint = { cmd = "ruff check packages/apt-registry-explorer/src tests/", help = "Run ruff linter" }
+lint-fix = { cmd = "ruff check --fix packages/apt-registry-explorer/src tests/", help = "Run ruff linter with auto-fix" }
+
+# Type checking
+mypy = { cmd = "mypy packages/apt-registry-explorer/src --show-error-codes --pretty", help = "Run mypy type checker" }
+pyright = { cmd = "basedpyright packages/apt-registry-explorer/src", help = "Run basedpyright type checker" }
+typecheck = { sequence = ["mypy", "pyright"], help = "Run all type checkers" }
+
+# Testing
+test = { cmd = "pytest", help = "Run all tests with coverage" }
+test-unit = { cmd = "pytest -m 'not integration'", help = "Run unit tests only (no network)" }
+test-integration = { cmd = "pytest -m integration", help = "Run integration tests only" }
+test-fast = { cmd = "pytest -x -q --no-cov", help = "Run tests quickly (stop on first failure, no coverage)" }
+
+# prek (git hooks)
+prek-install = { cmd = "prek install", help = "Install prek git hooks (run first!)" }
+prek-run = { cmd = "prek run --all-files", help = "Run all prek hooks on all files" }
+prek-update = { cmd = "prek autoupdate", help = "Update prek hook versions" }
+
+# Combined commands
+check = { sequence = ["format-check", "lint", "typecheck"], help = "Run all code quality checks" }
+fix = { sequence = ["format", "lint-fix"], help = "Auto-fix formatting and linting issues" }
+all = { sequence = ["fix", "typecheck", "test"], help = "Format, lint, typecheck, and test" }
+
+# CLI shortcuts
+cli = { cmd = "apt-registry-explorer", help = "Run the apt-registry-explorer CLI" }
+cli-help = { cmd = "apt-registry-explorer --help", help = "Show CLI help" }

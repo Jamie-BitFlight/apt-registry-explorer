@@ -13,11 +13,11 @@ def example_discovery():
     """Example of using the discovery module."""
     print("=== Discovery Example ===")
     print("This would explore a real APT repository")
-    
+
     # This is a demonstration - would need a real repository
     discovery = RepositoryDiscovery("https://example.com/debian")
     print(f"Base URL: {discovery.base_url}")
-    
+
     # Navigate to a path
     url = discovery.navigate(["dists", "stable"])
     print(f"Navigated URL: {url}")
@@ -27,15 +27,15 @@ def example_discovery():
 def example_sources_builder():
     """Example of building APT sources configuration."""
     print("=== Sources Builder Example ===")
-    
+
     builder = SourcesBuilder()
-    
+
     # Add a source with options
     options = SourceOptions(
         architectures=["amd64", "arm64"],
         signed_by="/usr/share/keyrings/example.gpg"
     )
-    
+
     builder.add_source(
         "deb",
         "https://example.com/debian",
@@ -43,12 +43,12 @@ def example_sources_builder():
         ["main", "contrib"],
         options
     )
-    
+
     # Build deb822 format
     print("deb822 format:")
     print(builder.build_deb822())
     print()
-    
+
     # Build one-line format
     print("One-line format:")
     for line in builder.build_one_line():
@@ -59,10 +59,10 @@ def example_sources_builder():
 def example_parse_deb_line():
     """Example of parsing a deb line."""
     print("=== Parse Deb Line Example ===")
-    
+
     builder = SourcesBuilder()
     line = "deb [arch=amd64 signed-by=/usr/share/keyrings/test.gpg] https://example.com/debian stable main contrib"
-    
+
     parsed = builder.parse_deb_line(line)
     print(f"Original line: {line}")
     print(f"Parsed:")
@@ -79,7 +79,7 @@ def example_parse_deb_line():
 def example_package_metadata():
     """Example of working with package metadata."""
     print("=== Package Metadata Example ===")
-    
+
     # Example Packages file content
     packages_content = """Package: nginx
 Version: 1.24.0-1
@@ -104,10 +104,10 @@ Description: interactive high-level object-oriented language
  programming language.
 
 """
-    
+
     index = PackageIndex()
     packages = index.parse_packages_file(packages_content)
-    
+
     print(f"Parsed {len(packages)} packages:")
     for pkg in packages:
         print(f"\n  Package: {pkg.package}")
@@ -116,14 +116,14 @@ Description: interactive high-level object-oriented language
         if pkg.description:
             desc_first_line = pkg.description.split('\n')[0]
             print(f"  Description: {desc_first_line}")
-    
+
     # Filter by name
     print("\nFiltering by name 'nginx':")
     index.packages = packages
     filtered = index.filter_by_name("nginx")
     for pkg in filtered:
         print(f"  - {pkg.package} {pkg.version}")
-    
+
     # Filter by regex
     print("\nFiltering by regex '^python':")
     filtered = index.filter_by_regex("^python")
@@ -137,12 +137,12 @@ def main():
     print("APT Registry Explorer Examples")
     print("=" * 60)
     print()
-    
+
     example_discovery()
     example_sources_builder()
     example_parse_deb_line()
     example_package_metadata()
-    
+
     print("=" * 60)
     print("Examples completed!")
     print("\nTo use the CLI:")
