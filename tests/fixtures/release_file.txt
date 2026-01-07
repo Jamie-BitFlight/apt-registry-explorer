@@ -1,0 +1,9 @@
+Origin: Ubuntu
+Label: Ubuntu
+Suite: jammy
+Version: 22.04
+Codename: jammy
+Date: Thu, 21 Apr 2022 17:14:34 UTC
+Architectures: amd64 arm64 armhf i386 ppc64el riscv64 s390x
+Components: main restricted universe multiverse
+Description: Ubuntu Jammy 22.04

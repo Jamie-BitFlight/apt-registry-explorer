@@ -1,0 +1,34 @@
+/* TUI styles for package browser */
+
+Screen {
+    layout: vertical;
+}
+
+#search-container {
+    height: 3;
+    padding: 1;
+}
+
+#content-container {
+    layout: horizontal;
+    height: 1fr;
+}
+
+#packages-container {
+    width: 50%;
+    border: solid green;
+}
+
+#details-container {
+    width: 50%;
+    border: solid blue;
+    padding: 1;
+}
+
+DataTable {
+    height: 1fr;
+}
+
+Input {
+    width: 100%;
+}

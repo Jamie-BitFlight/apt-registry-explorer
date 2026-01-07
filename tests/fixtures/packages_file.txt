@@ -1,0 +1,35 @@
+Package: nginx
+Version: 1.18.0-0ubuntu1
+Architecture: amd64
+Maintainer: Ubuntu Developers
+Installed-Size: 1024
+Depends: libc6, libssl1.1
+Section: web
+Priority: optional
+Homepage: https://nginx.org
+Description: small, powerful, scalable web/proxy server
+ Nginx is a web server with a focus on high concurrency, performance
+ and low memory usage. It can also act as a reverse proxy server.
+
+Package: python3
+Version: 3.10.4-0ubuntu2
+Architecture: amd64
+Maintainer: Matthias Klose
+Installed-Size: 112
+Depends: python3.10
+Section: python
+Priority: important
+Description: interactive high-level object-oriented language (default python3 version)
+ Python is a high-level, interactive, object-oriented language.
+
+Package: python3-pip
+Version: 22.0.2+dfsg-1
+Architecture: all
+Maintainer: Matthias Klose
+Installed-Size: 3024
+Depends: python3
+Recommends: build-essential, python3-dev
+Section: python
+Priority: optional
+Description: Python package installer
+ pip is the package installer for Python packages.
