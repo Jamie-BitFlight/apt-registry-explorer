@@ -5,8 +5,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typer.testing import CliRunner
-
 from apt_registry_explorer.cli import (
     ArchitectureLister,
     OutputFormat,
@@ -17,8 +15,7 @@ from apt_registry_explorer.cli import (
     app,
 )
 from apt_registry_explorer.packages import PackageMetadata
-from apt_registry_explorer.sources import ParsedDebLine, SourceOptions
-
+from typer.testing import CliRunner
 
 # ===== Fixtures =====
 
@@ -99,27 +96,27 @@ def sample_packages() -> list[PackageMetadata]:
 class TestSourceParser:
     """Test SourceParser class."""
 
-    def test_parse_url_source(self) -> None:
+    def test_parse_url_source(self) -> None:  # noqa: PLR6301
         """Test parsing plain URL source."""
         url, suite = SourceParser.parse_source("https://example.com/ubuntu")
         assert url == "https://example.com/ubuntu"
         assert suite == "stable"
 
-    def test_parse_deb_line_source(self) -> None:
+    def test_parse_deb_line_source(self) -> None:  # noqa: PLR6301
         """Test parsing deb line source."""
         deb_line = "deb https://example.com/ubuntu jammy main"
         url, suite = SourceParser.parse_source(deb_line)
         assert url == "https://example.com/ubuntu"
         assert suite == "jammy"
 
-    def test_parse_deb_line_with_options(self) -> None:
+    def test_parse_deb_line_with_options(self) -> None:  # noqa: PLR6301
         """Test parsing deb line with options."""
         deb_line = "deb [arch=amd64] https://example.com/ubuntu jammy main restricted"
         url, suite = SourceParser.parse_source(deb_line)
         assert url == "https://example.com/ubuntu"
         assert suite == "jammy"
 
-    def test_parse_invalid_deb_line_exits(self) -> None:
+    def test_parse_invalid_deb_line_exits(self) -> None:  # noqa: PLR6301
         """Test that invalid deb line raises Exit."""
         with pytest.raises(SystemExit):
             SourceParser.parse_source("deb invalid")
@@ -131,41 +128,35 @@ class TestSourceParser:
 class TestArchitectureLister:
     """Test ArchitectureLister class."""
 
-    def test_list_architectures_json(self, mock_discovery, capsys) -> None:
+    def test_list_architectures_json(self, mock_discovery, capsys) -> None:  # noqa: PLR6301
         """Test listing architectures in JSON format."""
         mock_discovery.find_release_file.return_value = "https://example.com/Release"
         mock_discovery.get_architectures.return_value = ["amd64", "arm64", "i386"]
 
-        ArchitectureLister.list_architectures(
-            "https://example.com", "jammy", OutputFormat.JSON
-        )
+        ArchitectureLister.list_architectures("https://example.com", "jammy", OutputFormat.JSON)
 
         captured = capsys.readouterr()
         output = json.loads(captured.out)
         assert output == {"architectures": ["amd64", "arm64", "i386"]}
 
-    def test_list_architectures_text(self, mock_discovery, capsys) -> None:
+    def test_list_architectures_text(self, mock_discovery, capsys) -> None:  # noqa: PLR6301
         """Test listing architectures in text format."""
         mock_discovery.find_release_file.return_value = "https://example.com/Release"
         mock_discovery.get_architectures.return_value = ["amd64", "arm64"]
 
-        ArchitectureLister.list_architectures(
-            "https://example.com", "jammy", OutputFormat.TEXT
-        )
+        ArchitectureLister.list_architectures("https://example.com", "jammy", OutputFormat.TEXT)
 
         captured = capsys.readouterr()
         assert "Available architectures:" in captured.out
         assert "amd64" in captured.out
         assert "arm64" in captured.out
 
-    def test_list_architectures_no_release_exits(self, mock_discovery) -> None:
+    def test_list_architectures_no_release_exits(self, mock_discovery) -> None:  # noqa: PLR6301
         """Test that missing release file causes exit."""
         mock_discovery.find_release_file.return_value = None
 
         with pytest.raises(SystemExit):
-            ArchitectureLister.list_architectures(
-                "https://example.com", "jammy", OutputFormat.JSON
-            )
+            ArchitectureLister.list_architectures("https://example.com", "jammy", OutputFormat.JSON)
 
 
 # ===== PackageQuerier Tests =====
@@ -174,19 +165,13 @@ class TestArchitectureLister:
 class TestPackageQuerier:
     """Test PackageQuerier class."""
 
-    def test_query_packages_json(self, mock_package_index, sample_packages, capsys) -> None:
+    def test_query_packages_json(self, mock_package_index, sample_packages, capsys) -> None:  # noqa: PLR6301
         """Test querying packages in JSON format."""
         mock_package_index.get_all_packages.return_value = sample_packages
         mock_package_index.filter_by_name.return_value = [sample_packages[0]]
 
         PackageQuerier.query_packages(
-            "https://example.com",
-            "amd64",
-            "main",
-            "nginx",
-            None,
-            None,
-            OutputFormat.JSON,
+            "https://example.com", "amd64", "main", "nginx", None, None, OutputFormat.JSON
         )
 
         captured = capsys.readouterr()
@@ -194,18 +179,12 @@ class TestPackageQuerier:
         assert len(output) == 1
         assert output[0]["package"] == "nginx"
 
-    def test_query_packages_text(self, mock_package_index, sample_packages, capsys) -> None:
+    def test_query_packages_text(self, mock_package_index, sample_packages, capsys) -> None:  # noqa: PLR6301
         """Test querying packages in text format."""
         mock_package_index.get_all_packages.return_value = sample_packages[:1]
 
         PackageQuerier.query_packages(
-            "https://example.com",
-            "amd64",
-            "main",
-            None,
-            None,
-            None,
-            OutputFormat.TEXT,
+            "https://example.com", "amd64", "main", None, None, None, OutputFormat.TEXT
         )
 
         captured = capsys.readouterr()
@@ -213,42 +192,30 @@ class TestPackageQuerier:
         assert "Version: 1.18.0-0ubuntu1" in captured.out
         assert "Architecture: amd64" in captured.out
 
-    def test_query_with_regex_filter(self, mock_package_index, sample_packages) -> None:
+    def test_query_with_regex_filter(self, mock_package_index, sample_packages) -> None:  # noqa: PLR6301
         """Test querying with regex filter."""
         python_packages = [p for p in sample_packages if p.package.startswith("python")]
         mock_package_index.get_all_packages.return_value = sample_packages
         mock_package_index.filter_by_regex.return_value = python_packages
 
         PackageQuerier.query_packages(
-            "https://example.com",
-            "amd64",
-            "main",
-            None,
-            "^python.*",
-            None,
-            OutputFormat.JSON,
+            "https://example.com", "amd64", "main", None, "^python.*", None, OutputFormat.JSON
         )
 
         mock_package_index.filter_by_regex.assert_called_once_with("^python.*")
 
-    def test_query_with_version_filter(self, mock_package_index, sample_packages) -> None:
+    def test_query_with_version_filter(self, mock_package_index, sample_packages) -> None:  # noqa: PLR6301
         """Test querying with version filter."""
         mock_package_index.get_all_packages.return_value = sample_packages
         mock_package_index.filter_by_version.return_value = sample_packages[:1]
 
         PackageQuerier.query_packages(
-            "https://example.com",
-            "amd64",
-            "main",
-            None,
-            None,
-            ">=1.0",
-            OutputFormat.JSON,
+            "https://example.com", "amd64", "main", None, None, ">=1.0", OutputFormat.JSON
         )
 
         mock_package_index.filter_by_version.assert_called_once_with(">=1.0")
 
-    def test_query_with_multiple_filters(self, mock_package_index, sample_packages) -> None:
+    def test_query_with_multiple_filters(self, mock_package_index, sample_packages) -> None:  # noqa: PLR6301
         """Test querying with multiple filters applied."""
         mock_package_index.get_all_packages.return_value = sample_packages
         mock_package_index.filter_by_name.return_value = [sample_packages[0]]
@@ -256,13 +223,7 @@ class TestPackageQuerier:
         mock_package_index.filter_by_version.return_value = [sample_packages[0]]
 
         PackageQuerier.query_packages(
-            "https://example.com",
-            "amd64",
-            "main",
-            "nginx",
-            "^ng.*",
-            ">=1.0",
-            OutputFormat.JSON,
+            "https://example.com", "amd64", "main", "nginx", "^ng.*", ">=1.0", OutputFormat.JSON
         )
 
         # Verify all filters were applied
@@ -277,14 +238,14 @@ class TestPackageQuerier:
 class TestRepositoryExplorer:
     """Test RepositoryExplorer class."""
 
-    def test_explorer_initialization(self) -> None:
+    def test_explorer_initialization(self) -> None:  # noqa: PLR6301
         """Test RepositoryExplorer initialization."""
         with patch("apt_registry_explorer.cli.RepositoryDiscovery"):
             explorer = RepositoryExplorer("https://example.com", SourcesFormat.DEB822)
             assert explorer.url == "https://example.com"
             assert explorer.output_format == SourcesFormat.DEB822
 
-    def test_explore_empty_directory(self, mock_discovery, capsys) -> None:
+    def test_explore_empty_directory(self, mock_discovery, capsys) -> None:  # noqa: PLR6301
         """Test exploring empty directory."""
         with patch("apt_registry_explorer.cli.RepositoryDiscovery") as mock_cls:
             mock_cls.return_value = mock_discovery
@@ -296,7 +257,7 @@ class TestRepositoryExplorer:
             captured = capsys.readouterr()
             assert "No items found at URL" in captured.out
 
-    def test_explore_with_dists_directory(self, mock_discovery, capsys) -> None:
+    def test_explore_with_dists_directory(self, mock_discovery, capsys) -> None:  # noqa: PLR6301
         """Test exploring repository with dists directory."""
         with patch("apt_registry_explorer.cli.RepositoryDiscovery") as mock_cls:
             mock_cls.return_value = mock_discovery
@@ -306,7 +267,9 @@ class TestRepositoryExplorer:
                 [("jammy", "dir"), ("focal", "dir")],  # Dists listing
             ]
             mock_discovery.navigate.return_value = "https://example.com/dists"
-            mock_discovery.find_release_file.return_value = "https://example.com/dists/jammy/Release"
+            mock_discovery.find_release_file.return_value = (
+                "https://example.com/dists/jammy/Release"
+            )
             mock_discovery.get_architectures.return_value = ["amd64", "arm64"]
             mock_discovery.get_components.return_value = ["main", "universe"]
 
@@ -320,53 +283,55 @@ class TestRepositoryExplorer:
             assert "Available suites:" in captured.out
             assert "jammy" in captured.out
 
-    def test_explore_generates_deb822_config(self, mock_discovery, capsys) -> None:
+    def test_explore_generates_deb822_config(self, mock_discovery, capsys) -> None:  # noqa: PLR6301
         """Test that explore generates deb822 format configuration."""
-        with patch("apt_registry_explorer.cli.RepositoryDiscovery") as mock_cls:
-            with patch("apt_registry_explorer.cli.SourcesBuilder") as mock_builder_cls:
-                mock_cls.return_value = mock_discovery
-                mock_builder = MagicMock()
-                mock_builder_cls.return_value = mock_builder
-                mock_builder.build_deb822.return_value = "Types: deb\nURIs: https://example.com"
+        with (
+            patch("apt_registry_explorer.cli.RepositoryDiscovery") as mock_cls,
+            patch("apt_registry_explorer.cli.SourcesBuilder") as mock_builder_cls,
+        ):
+            mock_cls.return_value = mock_discovery
+            mock_builder = MagicMock()
+            mock_builder_cls.return_value = mock_builder
+            mock_builder.build_deb822.return_value = "Types: deb\nURIs: https://example.com"
 
-                mock_discovery.list_directory.side_effect = [
-                    [("dists", "dir")],
-                    [("jammy", "dir")],
-                ]
-                mock_discovery.navigate.return_value = "https://example.com/dists"
-                mock_discovery.find_release_file.return_value = "https://example.com/dists/jammy/Release"
-                mock_discovery.get_architectures.return_value = ["amd64"]
-                mock_discovery.get_components.return_value = ["main"]
+            mock_discovery.list_directory.side_effect = [[("dists", "dir")], [("jammy", "dir")]]
+            mock_discovery.navigate.return_value = "https://example.com/dists"
+            mock_discovery.find_release_file.return_value = (
+                "https://example.com/dists/jammy/Release"
+            )
+            mock_discovery.get_architectures.return_value = ["amd64"]
+            mock_discovery.get_components.return_value = ["main"]
 
-                explorer = RepositoryExplorer("https://example.com", SourcesFormat.DEB822)
-                explorer.explore()
+            explorer = RepositoryExplorer("https://example.com", SourcesFormat.DEB822)
+            explorer.explore()
 
-                captured = capsys.readouterr()
-                assert "Generated sources configuration:" in captured.out
+            captured = capsys.readouterr()
+            assert "Generated sources configuration:" in captured.out
 
-    def test_explore_generates_oneline_config(self, mock_discovery, capsys) -> None:
+    def test_explore_generates_oneline_config(self, mock_discovery, capsys) -> None:  # noqa: PLR6301
         """Test that explore generates one-line format configuration."""
-        with patch("apt_registry_explorer.cli.RepositoryDiscovery") as mock_cls:
-            with patch("apt_registry_explorer.cli.SourcesBuilder") as mock_builder_cls:
-                mock_cls.return_value = mock_discovery
-                mock_builder = MagicMock()
-                mock_builder_cls.return_value = mock_builder
-                mock_builder.build_one_line.return_value = ["deb https://example.com jammy main"]
+        with (
+            patch("apt_registry_explorer.cli.RepositoryDiscovery") as mock_cls,
+            patch("apt_registry_explorer.cli.SourcesBuilder") as mock_builder_cls,
+        ):
+            mock_cls.return_value = mock_discovery
+            mock_builder = MagicMock()
+            mock_builder_cls.return_value = mock_builder
+            mock_builder.build_one_line.return_value = ["deb https://example.com jammy main"]
 
-                mock_discovery.list_directory.side_effect = [
-                    [("dists", "dir")],
-                    [("jammy", "dir")],
-                ]
-                mock_discovery.navigate.return_value = "https://example.com/dists"
-                mock_discovery.find_release_file.return_value = "https://example.com/dists/jammy/Release"
-                mock_discovery.get_architectures.return_value = ["amd64"]
-                mock_discovery.get_components.return_value = ["main"]
+            mock_discovery.list_directory.side_effect = [[("dists", "dir")], [("jammy", "dir")]]
+            mock_discovery.navigate.return_value = "https://example.com/dists"
+            mock_discovery.find_release_file.return_value = (
+                "https://example.com/dists/jammy/Release"
+            )
+            mock_discovery.get_architectures.return_value = ["amd64"]
+            mock_discovery.get_components.return_value = ["main"]
 
-                explorer = RepositoryExplorer("https://example.com", SourcesFormat.ONELINE)
-                explorer.explore()
+            explorer = RepositoryExplorer("https://example.com", SourcesFormat.ONELINE)
+            explorer.explore()
 
-                captured = capsys.readouterr()
-                assert "Generated sources configuration:" in captured.out
+            captured = capsys.readouterr()
+            assert "Generated sources configuration:" in captured.out
 
 
 # ===== Integration Tests for CLI Commands =====
@@ -375,17 +340,14 @@ class TestRepositoryExplorer:
 class TestCLICommands:
     """Integration tests for CLI commands using CliRunner."""
 
-    def test_query_command_requires_arch(self) -> None:
+    def test_query_command_requires_arch(self) -> None:  # noqa: PLR6301
         """Test that query command requires --arch parameter."""
         runner = CliRunner()
-        result = runner.invoke(
-            app,
-            ["query", "--source", "https://example.com"],
-        )
+        result = runner.invoke(app, ["query", "--source", "https://example.com"])
         assert result.exit_code == 1
         assert "--arch is required" in result.output
 
-    def test_query_command_with_list_arch(self, mock_discovery) -> None:
+    def test_query_command_with_list_arch(self, mock_discovery) -> None:  # noqa: PLR6301
         """Test query command with --list-arch flag."""
         mock_discovery.find_release_file.return_value = "https://example.com/Release"
         mock_discovery.get_architectures.return_value = ["amd64", "arm64"]
@@ -393,14 +355,11 @@ class TestCLICommands:
         with patch("apt_registry_explorer.cli.RepositoryDiscovery") as mock_cls:
             mock_cls.return_value = mock_discovery
             runner = CliRunner()
-            result = runner.invoke(
-                app,
-                ["query", "--source", "https://example.com", "--list-arch"],
-            )
+            result = runner.invoke(app, ["query", "--source", "https://example.com", "--list-arch"])
             assert result.exit_code == 0
             assert "amd64" in result.output
 
-    def test_discover_command(self, mock_discovery) -> None:
+    def test_discover_command(self, mock_discovery) -> None:  # noqa: PLR6301
         """Test discover command."""
         with patch("apt_registry_explorer.cli.RepositoryDiscovery") as mock_cls:
             mock_cls.return_value = mock_discovery
