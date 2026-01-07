@@ -60,14 +60,8 @@ class SourceParser:
             typer.echo("Error: Invalid deb line", err=True)
             raise typer.Exit(1)
 
-        parsed_url = parsed["url"]
-        parsed_suite = parsed["suite"]
-
-        # Type narrowing: if parse succeeded, url and suite are strings
-        repo_url = parsed_url if isinstance(parsed_url, str) else parsed_url[0]
-        suite = parsed_suite if isinstance(parsed_suite, str) else parsed_suite[0]
-
-        return repo_url, suite
+        # ParsedDebLine is a Pydantic model; access fields as attributes
+        return parsed.url, parsed.suite
 
 
 class ArchitectureLister:

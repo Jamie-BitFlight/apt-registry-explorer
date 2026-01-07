@@ -78,6 +78,9 @@ class PackageBrowserApp(App[None]):
         an instance method (not static). It's called by the framework's lifecycle
         management system as part of the Template Method pattern.
 
+        Returns:
+            ComposeResult: The composed child widgets.
+
         """
         yield Header()
 
