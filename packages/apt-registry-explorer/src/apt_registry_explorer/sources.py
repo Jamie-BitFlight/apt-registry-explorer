@@ -167,6 +167,7 @@ class SourcesBuilder:
 
         # Parse options block if present (enclosed in [])
         options = SourceOptions()
+        options_str = ""
         options_pattern = r"\[([^\]]+)\]"
 
         if match := re.search(options_pattern, line):
@@ -198,10 +199,11 @@ class SourcesBuilder:
         suite = parts[2]
         components = parts[3:]
 
-        return {
-            "type": source_type,
-            "url": url,
-            "suite": suite,
-            "components": components,
-            "options": options,
-        }
+        return ParsedDebLine(
+            type=source_type,
+            options_str=options_str,
+            url=url,
+            suite=suite,
+            components=components,
+            options=options,
+        )

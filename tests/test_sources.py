@@ -54,12 +54,12 @@ def test_parse_deb_line():
     parsed = builder.parse_deb_line(line)
 
     assert parsed is not None
-    assert parsed["type"] == "deb"
-    assert parsed["url"] == "https://example.com/debian"
-    assert parsed["suite"] == "stable"
-    assert parsed["components"] == ["main", "contrib"]
-    assert parsed["options"].architectures == ["amd64"]
-    assert parsed["options"].signed_by == "/usr/share/keyrings/test.gpg"
+    assert parsed.type == "deb"
+    assert parsed.url == "https://example.com/debian"
+    assert parsed.suite == "stable"
+    assert parsed.components == ["main", "contrib"]
+    assert parsed.options.architectures == ["amd64"]
+    assert parsed.options.signed_by == "/usr/share/keyrings/test.gpg"
 
 
 def test_parse_simple_deb_line():
@@ -70,7 +70,7 @@ def test_parse_simple_deb_line():
     parsed = builder.parse_deb_line(line)
 
     assert parsed is not None
-    assert parsed["type"] == "deb"
-    assert parsed["url"] == "https://example.com/debian"
-    assert parsed["suite"] == "stable"
-    assert parsed["components"] == ["main"]
+    assert parsed.type == "deb"
+    assert parsed.url == "https://example.com/debian"
+    assert parsed.suite == "stable"
+    assert parsed.components == ["main"]
