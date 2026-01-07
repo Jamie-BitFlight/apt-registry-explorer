@@ -11,8 +11,8 @@ def test_sources_builder_add_source():
     builder.add_source("deb", "https://example.com/debian", "stable", ["main", "contrib"])
 
     assert len(builder.entries) == 1
-    assert builder.entries[0]["type"] == "deb"
-    assert builder.entries[0]["url"] == "https://example.com/debian"
+    assert builder.entries[0].type == "deb"
+    assert builder.entries[0].url == "https://example.com/debian"
 
 
 def test_build_deb822():

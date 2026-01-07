@@ -12,7 +12,6 @@ from apt_registry_explorer.packages import PackageIndex
 
 
 @pytest.mark.integration
-@pytest.mark.slow
 def test_discover_ubuntu_jammy_release() -> None:
     """
     Test discovering Ubuntu 22.04 (Jammy) repository metadata.
@@ -48,7 +47,6 @@ def test_discover_ubuntu_jammy_release() -> None:
 
 
 @pytest.mark.integration
-@pytest.mark.slow
 def test_fetch_ubuntu_jammy_packages() -> None:
     """
     Test fetching and parsing real package data from Ubuntu Jammy.
@@ -83,7 +81,6 @@ def test_fetch_ubuntu_jammy_packages() -> None:
 
 
 @pytest.mark.integration
-@pytest.mark.slow
 def test_filter_ubuntu_python_packages() -> None:
     """
     Test filtering packages using regex against real Ubuntu repository.

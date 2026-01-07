@@ -1,12 +1,11 @@
 """APT sources file builder with GPG/arch/signed-by options."""
 
 import re
-from dataclasses import dataclass
-from typing import TypedDict
+
+from pydantic import BaseModel
 
 
-@dataclass
-class SourceOptions:
+class SourceOptions(BaseModel):
     """Options for apt.sources configuration."""
 
     signed_by: str | None = None
@@ -16,20 +15,21 @@ class SourceOptions:
     trusted: bool = False
 
 
-class SourceEntry(TypedDict):
-    """Type for source entry dictionary."""
+class SourceEntry(BaseModel):
+    """Type for source entry."""
 
     type: str
     url: str
     suite: str
     components: list[str]
-    options: SourceOptions | None
+    options: SourceOptions | None = None
 
 
-class ParsedDebLine(TypedDict):
+class ParsedDebLine(BaseModel):
     """Type for parsed deb line."""
 
     type: str
+    options_str: str
     url: str
     suite: str
     components: list[str]
@@ -61,13 +61,9 @@ class SourcesBuilder:
             options: Optional source options
 
         """
-        entry: SourceEntry = {
-            "type": source_type,
-            "url": url,
-            "suite": suite,
-            "components": components,
-            "options": options,
-        }
+        entry = SourceEntry(
+            type=source_type, url=url, suite=suite, components=components, options=options
+        )
         self.entries.append(entry)
 
     def build_deb822(self) -> str:
@@ -83,18 +79,14 @@ class SourcesBuilder:
             lines = []
 
             # Add Types, URIs, and Suites fields
-            lines.extend([
-                f"Types: {entry['type']}",
-                f"URIs: {entry['url']}",
-                f"Suites: {entry['suite']}",
-            ])
+            lines.extend([f"Types: {entry.type}", f"URIs: {entry.url}", f"Suites: {entry.suite}"])
 
             # Add Components field
-            components_str = " ".join(entry["components"])
+            components_str = " ".join(entry.components)
             lines.append(f"Components: {components_str}")
 
             # Add options
-            opts = entry["options"]
+            opts = entry.options
             if opts is not None:
                 if opts.signed_by:
                     lines.append(f"Signed-By: {opts.signed_by}")
@@ -128,7 +120,7 @@ class SourcesBuilder:
         output = []
 
         for entry in self.entries:
-            opts = entry["options"]
+            opts = entry.options
             options_parts = []
 
             if opts is not None:
@@ -143,14 +135,14 @@ class SourcesBuilder:
                     options_parts.append("trusted=yes")
 
             # Build the line
-            parts = [entry["type"]]
+            parts = [entry.type]
 
             if options_parts:
                 options_str = " ".join(options_parts)
                 parts.append(f"[{options_str}]")
 
-            parts.extend((entry["url"], entry["suite"]))
-            parts.extend(entry["components"])
+            parts.extend((entry.url, entry.suite))
+            parts.extend(entry.components)
 
             output.append(" ".join(parts))
 

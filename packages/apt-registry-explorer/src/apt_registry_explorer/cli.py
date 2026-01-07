@@ -192,29 +192,17 @@ def query(
     output: Annotated[OutputFormat, typer.Option(help="Output format")] = OutputFormat.JSON,
 ) -> None:
     """Query APT repository for package information."""
-    try:
-        repo_url, suite = SourceParser.parse_source(source)
+    repo_url, suite = SourceParser.parse_source(source)
 
-        if list_arch:
-            ArchitectureLister.list_architectures(repo_url, suite, output)
-            return
+    if list_arch:
+        ArchitectureLister.list_architectures(repo_url, suite, output)
+        return
 
-        if not arch:
-            typer.echo("Error: --arch is required for package queries", err=True)
-            raise typer.Exit(1)
+    if not arch:
+        typer.echo("Error: --arch is required for package queries", err=True)
+        raise typer.Exit(1)
 
-        PackageQuerier.query_packages(
-            repo_url, arch, component, package, regex, version_spec, output
-        )
-
-    except (ValueError, KeyError, OSError) as e:
-        typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(1) from e
-    except typer.Exit:
-        raise
-    except Exception as e:
-        typer.echo(f"Unexpected error: {e}", err=True)
-        raise typer.Exit(1) from e
+    PackageQuerier.query_packages(repo_url, arch, component, package, regex, version_spec, output)
 
 
 class RepositoryExplorer:
@@ -329,12 +317,8 @@ def discover(
     ] = SourcesFormat.DEB822,
 ) -> None:
     """Interactively discover repository structure and generate sources configuration."""
-    try:
-        explorer = RepositoryExplorer(url, output_format)
-        explorer.explore()
-    except (ValueError, OSError, RuntimeError) as e:
-        typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(1) from e
+    explorer = RepositoryExplorer(url, output_format)
+    explorer.explore()
 
 
 def main() -> None:

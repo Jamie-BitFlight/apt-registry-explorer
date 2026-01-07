@@ -184,7 +184,6 @@ python_functions = ["test_*"]
 pythonpath = [".", "packages/apt-registry-explorer/src"]
 asyncio_mode = "auto"
 markers = [
-    "slow: tests that take significant time to run",
     "integration: integration tests against real repositories",
 ]
 
