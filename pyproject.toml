@@ -51,6 +51,8 @@ dev = [
     "hatch-vcs>=0.5.0",
     "mypy>=1.18.2",
     "basedpyright>=1.33.0",
+    "poethepoet>=0.32.0",
+    "pre-commit>=4.0.0",
 ]
 
 [project.scripts]
@@ -220,3 +222,42 @@ source = "vcs"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "packages/apt-registry-explorer/src/apt_registry_explorer/_version.py"
+
+# =============================================================================
+# Poe the Poet - Task Runner Configuration
+# =============================================================================
+[tool.poe]
+poetry_command = ""
+
+[tool.poe.tasks]
+# Formatting
+format = { cmd = "ruff format packages/apt-registry-explorer/src tests/", help = "Format code with ruff" }
+format-check = { cmd = "ruff format --check packages/apt-registry-explorer/src tests/", help = "Check code formatting" }
+
+# Linting
+lint = { cmd = "ruff check packages/apt-registry-explorer/src tests/", help = "Run ruff linter" }
+lint-fix = { cmd = "ruff check --fix packages/apt-registry-explorer/src tests/", help = "Run ruff linter with auto-fix" }
+
+# Type checking
+mypy = { cmd = "mypy packages/apt-registry-explorer/src --show-error-codes --pretty", help = "Run mypy type checker" }
+pyright = { cmd = "basedpyright packages/apt-registry-explorer/src", help = "Run basedpyright type checker" }
+typecheck = { sequence = ["mypy", "pyright"], help = "Run all type checkers" }
+
+# Testing
+test = { cmd = "pytest", help = "Run all tests with coverage" }
+test-unit = { cmd = "pytest -m 'not integration'", help = "Run unit tests only (no network)" }
+test-integration = { cmd = "pytest -m integration", help = "Run integration tests only" }
+test-fast = { cmd = "pytest -x -q --no-cov", help = "Run tests quickly (stop on first failure, no coverage)" }
+
+# Pre-commit
+pre-commit-install = { cmd = "pre-commit install", help = "Install pre-commit hooks" }
+pre-commit-run = { cmd = "pre-commit run --all-files", help = "Run pre-commit on all files" }
+
+# Combined commands
+check = { sequence = ["format-check", "lint", "typecheck"], help = "Run all code quality checks" }
+fix = { sequence = ["format", "lint-fix"], help = "Auto-fix formatting and linting issues" }
+all = { sequence = ["fix", "typecheck", "test"], help = "Format, lint, typecheck, and test" }
+
+# CLI shortcuts
+cli = { cmd = "apt-registry-explorer", help = "Run the apt-registry-explorer CLI" }
+cli-help = { cmd = "apt-registry-explorer --help", help = "Show CLI help" }
