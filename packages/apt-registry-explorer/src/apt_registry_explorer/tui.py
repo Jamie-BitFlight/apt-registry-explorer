@@ -71,8 +71,14 @@ class PackageBrowserApp(App[None]):
         self.packages = packages
         self.filtered_packages = packages
 
-    def compose(self) -> ComposeResult:  # noqa: PLR6301
-        """Create child widgets."""
+    def compose(self) -> ComposeResult:
+        """Create child widgets.
+
+        Note: This method is required by the Textual framework and must remain
+        an instance method (not static). It's called by the framework's lifecycle
+        management system as part of the Template Method pattern.
+
+        """
         yield Header()
 
         with Container(id="search-container"):
