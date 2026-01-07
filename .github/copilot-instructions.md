@@ -1,13 +1,41 @@
 # Copilot Instructions for apt-registry-explorer
 
+## CRITICAL: First Steps Before Any Work
+
+**MANDATORY**: Run these commands before making any changes:
+
+```bash
+# 1. Install dependencies
+uv sync
+
+# 2. Install prek git hooks (REQUIRED - do this first!)
+uv run prek install
+```
+
+## BANNED: Never Use --no-verify
+
+**`git commit --no-verify` is STRICTLY FORBIDDEN.**
+
+- There is NO scenario where `--no-verify` should be used
+- All commits MUST pass prek hooks (ruff, mypy, basedpyright, prettier, pytest)
+- If hooks fail, FIX THE CODE - do not bypass the hooks
+- This applies to all commits, including "quick fixes" or "WIP" commits
+
+If you encounter hook failures:
+
+1. Run `uv run poe fix` to auto-fix formatting/linting issues
+2. Run `uv run poe typecheck` to see type errors
+3. Run `uv run poe test-fast` to debug test failures
+4. Fix the issues, then commit normally
+
 ## Repository Overview
 
 **Purpose:** Python utility to validate and explore APT registry endpoints without requiring apt-source configuration or root access.
 
-**Project Type:** Python command-line tool with TUI (Terminal User Interface)  
-**Size:** ~450 KB, 13 Python modules  
-**Target Runtime:** Python 3.11-3.14  
-**Package Manager:** uv (from Astral)  
+**Project Type:** Python command-line tool with TUI (Terminal User Interface)
+**Size:** ~450 KB, 13 Python modules
+**Target Runtime:** Python 3.11-3.14
+**Package Manager:** uv (from Astral)
 **Build System:** hatchling with hatch-vcs for version management
 
 **Key Frameworks:**
@@ -16,6 +44,8 @@
 - **Textual** - Terminal UI framework from textualize.io
 - **httpx >=0.27.0** - Async HTTP client
 - **Pydantic >=2.0.0** - Data validation and parsing
+- **poethepoet (poe)** - Task runner for simplified commands
+- **prek** - Rust-based git hooks (pre-commit replacement)
 
 **Modern Python Features Used:**
 
@@ -44,6 +74,9 @@ tests/                   # Test suite (20 unit tests + 4 integration tests)
 .github/workflows/       # CI/CD workflows
 ├── test.yml            # Main test workflow (quality, unit, integration)
 └── regenerate-screenshot.yml  # Manual workflow for TUI screenshots
+
+.pre-commit-config.yaml  # prek/pre-commit hooks configuration
+pyproject.toml           # Project config + poe tasks
 ```
 
 ## Architecture & Code Quality
@@ -69,7 +102,7 @@ tests/                   # Test suite (20 unit tests + 4 integration tests)
 
 ## Build & Development Workflow
 
-### Bootstrap
+### Bootstrap (First Time Setup)
 
 ```bash
 # Install uv (one-time setup)
@@ -79,35 +112,47 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 git clone <repo-url>
 cd apt-registry-explorer
 uv sync
+
+# Install prek git hooks (REQUIRED!)
+uv run prek install
+
+# Verify hooks are working
+uv run prek run --all-files
 ```
 
-### Code Quality (ALWAYS run before committing)
+### Using Poe Commands (Recommended)
+
+All common tasks are available via `uv run poe <command>`:
 
 ```bash
-# Format code
-uv run ruff format packages/apt-registry-explorer/src tests/
+# Formatting
+uv run poe format        # Format code with ruff
+uv run poe format-check  # Check formatting without changes
 
-# Lint code
-uv run ruff check packages/apt-registry-explorer/src tests/
+# Linting
+uv run poe lint          # Run ruff linter
+uv run poe lint-fix      # Run linter with auto-fix
 
-# Type check with mypy
-uv run mypy packages/apt-registry-explorer/src --show-error-codes --pretty
+# Type Checking
+uv run poe mypy          # Run mypy
+uv run poe pyright       # Run basedpyright
+uv run poe typecheck     # Run both type checkers
 
-# Type check with basedpyright
-uv run basedpyright packages/apt-registry-explorer/src
-```
+# Testing
+uv run poe test          # All tests with coverage
+uv run poe test-unit     # Unit tests only (no network)
+uv run poe test-integration  # Integration tests only
+uv run poe test-fast     # Quick tests (no coverage, stop on failure)
 
-### Testing (ALWAYS run before pushing commits)
+# Combined Commands
+uv run poe check         # format-check + lint + typecheck
+uv run poe fix           # format + lint-fix
+uv run poe all           # fix + typecheck + test
 
-```bash
-# Run unit tests only (fast, no network)
-uv run pytest tests/ -v -m "not integration"
-
-# Run integration tests (takes ~5-10 seconds, requires network)
-uv run pytest tests/ -v -m "integration"
-
-# Run all tests with coverage
-uv run pytest tests/ -v --cov=apt_registry_explorer --cov-report=term
+# Git Hooks
+uv run poe prek-install  # Install git hooks
+uv run poe prek-run      # Run all hooks on all files
+uv run poe prek-update   # Update hook versions
 ```
 
 ### Running the Application
@@ -119,6 +164,22 @@ uv run apt-registry-explorer query --source "deb http://archive.ubuntu.com/ubunt
 uv run apt-registry-explorer discover https://example.com/debian
 ```
 
+## prek Git Hooks
+
+The `.pre-commit-config.yaml` configures these hooks that run on every commit:
+
+| Hook                   | Purpose                       |
+| ---------------------- | ----------------------------- |
+| `ruff-format`          | Code formatting               |
+| `ruff`                 | Linting with auto-fix         |
+| `mypy`                 | Type checking                 |
+| `basedpyright`         | Enhanced type checking        |
+| `prettier`             | Format YAML/JSON/Markdown     |
+| `pytest`               | Run unit tests                |
+| `trailing-whitespace`  | Remove trailing whitespace    |
+| `end-of-file-fixer`    | Ensure files end with newline |
+| `check-yaml/json/toml` | Validate config files         |
+
 ## CI/CD Workflow
 
 **GitHub Actions Structure:**
@@ -129,14 +190,9 @@ uv run apt-registry-explorer discover https://example.com/debian
    - mypy type checking
    - basedpyright type checking
 
-2. **Unit Tests Job** - Runs once on Python 3.12
-   - Tests excluding integration marker
-   - CLI entry point validation (help system only)
-
-3. **Integration Tests Job** - Matrix across Python 3.11-3.14
-   - Tests marked with @pytest.mark.integration
-   - Tests against real Ubuntu Jammy repository
-   - Validates network operations and real data parsing
+2. **Tests Job** - Matrix across Python 3.11-3.14
+   - All tests (unit + integration) with coverage
+   - CLI entry point validation
 
 **Action Versions:** Always use latest major versions:
 
@@ -148,10 +204,11 @@ uv run apt-registry-explorer discover https://example.com/debian
 
 **DO:**
 
+- Run `uv run prek install` before any work
+- Use `uv run poe <command>` for all tasks
 - Use Pydantic BaseModel for all structured data types
 - Follow SOLID principles - single responsibility per class
 - Let Typer handle exceptions automatically
-- Run all quality checks before committing
 - Add type hints to all functions
 - Keep functions small (<15 lines when possible)
 - Use built-in generics (list, dict, tuple) not typing module
@@ -159,6 +216,7 @@ uv run apt-registry-explorer discover https://example.com/debian
 
 **DON'T:**
 
+- Use `git commit --no-verify` (NEVER!)
 - Use TypedDict or dataclass (use Pydantic BaseModel)
 - Catch and re-raise exceptions in Typer commands
 - Suppress complexity warnings with noqa (refactor instead)
@@ -170,7 +228,7 @@ uv run apt-registry-explorer discover https://example.com/debian
 
 - Unit tests mock external dependencies (HTTP, file I/O)
 - Integration tests (@pytest.mark.integration) test against real Ubuntu repos
-- Coverage baseline: 47% (incrementally improving)
+- Coverage baseline: 70% (`fail_under` in pyproject.toml)
 - Each SOLID class method should have corresponding unit tests
 - Test edge cases and error conditions
 
@@ -190,7 +248,7 @@ uv run apt-registry-explorer discover https://example.com/debian
 1. Check latest versions on respective release pages
 2. Update pyproject.toml dependencies section
 3. Run `uv lock` to update lockfile
-4. Run full test suite to verify compatibility
+4. Run `uv run poe all` to verify compatibility
 5. Update workflows if action versions changed
 
 **Improving test coverage:**
