@@ -54,7 +54,7 @@ dev = [
 ]
 
 [project.scripts]
-apt-registry-explorer = "apt_registry_explorer.cli:main"
+apt-registry-explorer = "apt_registry_explorer.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/Jamie-BitFlight/apt-registry-explorer"
