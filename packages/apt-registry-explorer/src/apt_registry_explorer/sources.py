@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from typing import TypedDict
 
 
 @dataclass
@@ -15,12 +16,32 @@ class SourceOptions:
     trusted: bool = False
 
 
+class SourceEntry(TypedDict):
+    """Type for source entry dictionary."""
+
+    type: str
+    url: str
+    suite: str
+    components: list[str]
+    options: SourceOptions | None
+
+
+class ParsedDebLine(TypedDict):
+    """Type for parsed deb line."""
+
+    type: str
+    url: str
+    suite: str
+    components: list[str]
+    options: SourceOptions
+
+
 class SourcesBuilder:
     """Build apt.sources configuration from repository information."""
 
     def __init__(self) -> None:
         """Initialize sources builder."""
-        self.entries: list[dict] = []
+        self.entries: list[SourceEntry] = []
 
     def add_source(
         self,
@@ -40,12 +61,12 @@ class SourcesBuilder:
             options: Optional source options
 
         """
-        entry = {
+        entry: SourceEntry = {
             "type": source_type,
             "url": url,
             "suite": suite,
             "components": components,
-            "options": options or SourceOptions(),
+            "options": options,
         }
         self.entries.append(entry)
 
@@ -74,23 +95,24 @@ class SourcesBuilder:
 
             # Add options
             opts = entry["options"]
-            if opts.signed_by:
-                lines.append(f"Signed-By: {opts.signed_by}")
+            if opts is not None:
+                if opts.signed_by:
+                    lines.append(f"Signed-By: {opts.signed_by}")
 
-            if opts.architectures:
-                arch_str = " ".join(opts.architectures)
-                lines.append(f"Architectures: {arch_str}")
+                if opts.architectures:
+                    arch_str = " ".join(opts.architectures)
+                    lines.append(f"Architectures: {arch_str}")
 
-            if opts.languages:
-                lang_str = " ".join(opts.languages)
-                lines.append(f"Languages: {lang_str}")
+                if opts.languages:
+                    lang_str = " ".join(opts.languages)
+                    lines.append(f"Languages: {lang_str}")
 
-            if opts.targets:
-                targets_str = " ".join(opts.targets)
-                lines.append(f"Targets: {targets_str}")
+                if opts.targets:
+                    targets_str = " ".join(opts.targets)
+                    lines.append(f"Targets: {targets_str}")
 
-            if opts.trusted:
-                lines.append("Trusted: yes")
+                if opts.trusted:
+                    lines.append("Trusted: yes")
 
             output.append("\n".join(lines))
 
@@ -109,15 +131,16 @@ class SourcesBuilder:
             opts = entry["options"]
             options_parts = []
 
-            if opts.signed_by:
-                options_parts.append(f"signed-by={opts.signed_by}")
+            if opts is not None:
+                if opts.signed_by:
+                    options_parts.append(f"signed-by={opts.signed_by}")
 
-            if opts.architectures:
-                arch_str = ",".join(opts.architectures)
-                options_parts.append(f"arch={arch_str}")
+                if opts.architectures:
+                    arch_str = ",".join(opts.architectures)
+                    options_parts.append(f"arch={arch_str}")
 
-            if opts.trusted:
-                options_parts.append("trusted=yes")
+                if opts.trusted:
+                    options_parts.append("trusted=yes")
 
             # Build the line
             parts = [entry["type"]]
@@ -134,7 +157,7 @@ class SourcesBuilder:
         return output
 
     @staticmethod
-    def parse_deb_line(line: str) -> dict | None:
+    def parse_deb_line(line: str) -> ParsedDebLine | None:
         """Parse a traditional one-line deb source line.
 
         Args:
@@ -172,9 +195,10 @@ class SourcesBuilder:
                             options.trusted = True
 
         # Now parse the remaining parts
-        MIN_PARTS = 4  # type: url suite component(s)
+        # Minimum required parts: type url suite component(s)
+        min_parts = 4
         parts = line.split()
-        if len(parts) < MIN_PARTS:
+        if len(parts) < min_parts:
             return None
 
         source_type = parts[0]

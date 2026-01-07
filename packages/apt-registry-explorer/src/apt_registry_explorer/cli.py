@@ -32,7 +32,7 @@ class SourcesFormat(StrEnum):
 
 
 @app.command()
-def query(
+def query(  # noqa: C901, PLR0912, PLR0915 - CLI command complexity acceptable for arg handling
     source: Annotated[str, typer.Option(help="Repository URL or deb line")],
     list_arch: Annotated[
         bool, typer.Option("--list-arch", help="List available architectures")
@@ -54,9 +54,12 @@ def query(
             builder = SourcesBuilder()
             if not (parsed := builder.parse_deb_line(source)):
                 typer.echo("Error: Invalid deb line", err=True)
-                raise typer.Exit(1)
-            repo_url = parsed["url"]
-            suite = parsed["suite"]
+                raise typer.Exit(1)  # noqa: TRY301 - CLI exit point
+            parsed_url = parsed["url"]
+            parsed_suite = parsed["suite"]
+            # Type narrowing: if parse succeeded, url and suite are strings
+            repo_url = parsed_url if isinstance(parsed_url, str) else parsed_url[0]
+            suite = parsed_suite if isinstance(parsed_suite, str) else parsed_suite[0]
         else:
             # Assume URL
             repo_url = source
@@ -69,7 +72,7 @@ def query(
                 release_url := discovery.find_release_file(f"{repo_url.rstrip('/')}/dists/{suite}/")
             ):
                 typer.echo("Error: Could not find Release file", err=True)
-                raise typer.Exit(1)
+                raise typer.Exit(1)  # noqa: TRY301 - CLI exit point
 
             architectures = discovery.get_architectures(release_url)
             match output:
@@ -84,7 +87,7 @@ def query(
         # Query packages
         if not arch:
             typer.echo("Error: --arch is required for package queries", err=True)
-            raise typer.Exit(1)
+            raise typer.Exit(1)  # noqa: TRY301 - CLI exit point
 
         index = PackageIndex()
         index.load_from_url(repo_url, arch, component)
@@ -122,18 +125,20 @@ def query(
         raise typer.Exit(1) from e
     except typer.Exit:
         raise
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         typer.echo(f"Unexpected error: {e}", err=True)
         raise typer.Exit(1) from e
 
 
 @app.command()
-def discover(
+def discover(  # noqa: C901, PLR0912 - CLI command complexity acceptable for interactive flow
     url: Annotated[str, typer.Argument(help="Repository URL to explore")],
-    format: Annotated[SourcesFormat, typer.Option(help="Output format")] = SourcesFormat.DEB822,
+    output_format: Annotated[
+        SourcesFormat, typer.Option("--format", help="Output format")
+    ] = SourcesFormat.DEB822,
 ) -> None:
     """Interactively discover repository structure and generate sources configuration."""
-    try:
+    try:  # noqa: PLR1702 - CLI interactive flow needs nested structure
         discovery = RepositoryDiscovery(url)
 
         # List initial directory
@@ -188,7 +193,7 @@ def discover(
                         builder.add_source("deb", url, name, comps or ["main"], options)
 
                         typer.echo("\n    Generated sources configuration:")
-                        match format:
+                        match output_format:
                             case SourcesFormat.DEB822:
                                 typer.echo("    " + builder.build_deb822().replace("\n", "\n    "))
                             case SourcesFormat.ONELINE:

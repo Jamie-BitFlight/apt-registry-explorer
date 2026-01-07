@@ -39,6 +39,9 @@ class RepositoryDiscovery:
             try:
                 response = await client.get(url)
                 response.raise_for_status()
+            except httpx.HTTPError as e:
+                raise ValueError(f"Failed to list directory {url}: {e}") from e
+            else:
                 content = response.text
 
                 # Parse HTML directory listing (Apache/nginx style)
@@ -62,8 +65,6 @@ class RepositoryDiscovery:
                         items.append((item_name, item_type))
 
                 return items
-            except httpx.HTTPError as e:
-                raise ValueError(f"Failed to list directory {url}: {e}") from e
 
     def list_directory(self, url: str) -> list[tuple[str, str]]:
         """List directories and files at a given URL (sync version for backwards compatibility).
@@ -78,6 +79,9 @@ class RepositoryDiscovery:
         try:
             response = self.client.get(url)
             response.raise_for_status()
+        except httpx.HTTPError as e:
+            raise ValueError(f"Failed to list directory {url}: {e}") from e
+        else:
             content = response.text
 
             # Parse HTML directory listing (Apache/nginx style)
@@ -101,8 +105,6 @@ class RepositoryDiscovery:
                     items.append((item_name, item_type))
 
             return items
-        except httpx.HTTPError as e:
-            raise ValueError(f"Failed to list directory {url}: {e}") from e
 
     def navigate(self, path_components: list[str]) -> str:
         """Navigate to a specific path in the repository.
@@ -152,6 +154,9 @@ class RepositoryDiscovery:
         try:
             response = self.client.get(release_url)
             response.raise_for_status()
+        except httpx.HTTPError:
+            return []
+        else:
             content = response.text
 
             # Parse Release file for Architectures field
@@ -160,8 +165,6 @@ class RepositoryDiscovery:
             if match := re.search(arch_pattern, content, re.MULTILINE):
                 return match.group(1).strip().split()
 
-            return []
-        except httpx.HTTPError:
             return []
 
     def get_components(self, release_url: str) -> list[str]:
@@ -177,6 +180,9 @@ class RepositoryDiscovery:
         try:
             response = self.client.get(release_url)
             response.raise_for_status()
+        except httpx.HTTPError:
+            return []
+        else:
             content = response.text
 
             # Parse Release file for Components field
@@ -185,6 +191,4 @@ class RepositoryDiscovery:
             if match := re.search(comp_pattern, content, re.MULTILINE):
                 return match.group(1).strip().split()
 
-            return []
-        except httpx.HTTPError:
             return []

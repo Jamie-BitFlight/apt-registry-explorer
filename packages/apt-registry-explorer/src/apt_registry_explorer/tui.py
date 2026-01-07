@@ -47,7 +47,7 @@ class PackageDetails(Static):
             self.update("[dim]No package selected[/dim]")
 
 
-class PackageBrowserApp(App):
+class PackageBrowserApp(App[None]):
     """TUI application for browsing APT packages."""
 
     # Load CSS from external file
@@ -121,8 +121,9 @@ class PackageBrowserApp(App):
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Handle row selection in package table."""
         if event.row_key is not None:
+            # row_key.value can be str or int depending on key type
             row_index = event.row_key.value
-            if 0 <= row_index < len(self.filtered_packages):
+            if isinstance(row_index, int) and 0 <= row_index < len(self.filtered_packages):
                 selected_package = self.filtered_packages[row_index]
                 details = self.query_one("#package-details", PackageDetails)
                 details.update_package(selected_package)

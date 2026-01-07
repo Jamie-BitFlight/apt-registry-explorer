@@ -93,9 +93,10 @@ class PackageIndex:
             try:
                 response = await client.get(packages_url)
                 response.raise_for_status()
-                return response.text
             except httpx.HTTPError as e:
                 raise ValueError(f"Failed to fetch Packages file: {e}") from e
+            else:
+                return response.text
 
     def fetch_packages_file(self, url: str, architecture: str, component: str) -> str:
         """Fetch Packages file from repository (sync version for backwards compatibility).
@@ -127,9 +128,10 @@ class PackageIndex:
         try:
             response = self.client.get(packages_url)
             response.raise_for_status()
-            return response.text
         except httpx.HTTPError as e:
             raise ValueError(f"Failed to fetch Packages file: {e}") from e
+        else:
+            return response.text
 
     def parse_packages_file(self, content: str) -> list[PackageMetadata]:
         """Parse Packages file content.
@@ -142,7 +144,7 @@ class PackageIndex:
 
         """
         packages = []
-        current_package = {}
+        current_package: dict[str, str] = {}
         current_field = None
 
         for line in content.split("\n"):
