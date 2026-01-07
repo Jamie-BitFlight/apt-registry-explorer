@@ -2,6 +2,33 @@
 
 This document provides comprehensive guidance for AI assistants working with this codebase.
 
+## CRITICAL: First Steps Before Any Work
+
+**MANDATORY**: Run these commands before making any changes:
+
+```bash
+# 1. Install dependencies
+uv sync
+
+# 2. Install prek git hooks (REQUIRED - do this first!)
+uv run prek install
+```
+
+## BANNED: Never Use --no-verify
+
+**`git commit --no-verify` is STRICTLY FORBIDDEN.**
+
+- There is NO scenario where `--no-verify` should be used
+- All commits MUST pass prek hooks (ruff, mypy, basedpyright, prettier, pytest)
+- If hooks fail, FIX THE CODE - do not bypass the hooks
+- This applies to all commits, including "quick fixes" or "WIP" commits
+
+If you encounter hook failures:
+1. Run `uv run poe fix` to auto-fix formatting/linting issues
+2. Run `uv run poe typecheck` to see type errors
+3. Run `uv run poe test-fast` to debug test failures
+4. Fix the issues, then commit normally
+
 ## Repository Overview
 
 **Purpose:** Python utility to validate and explore APT registry endpoints without requiring apt-source configuration or root access.
@@ -15,19 +42,17 @@ This document provides comprehensive guidance for AI assistants working with thi
 ## Quick Reference
 
 ```bash
-# Install dependencies
-uv sync
+# Install dependencies and git hooks (FIRST TIME SETUP)
+uv sync && uv run prek install
 
-# Run tests (must pass before commits)
-uv run pytest
-
-# Run linting and formatting
-uv run ruff format packages/apt-registry-explorer/src tests/
-uv run ruff check packages/apt-registry-explorer/src tests/
-
-# Type checking
-uv run mypy packages/apt-registry-explorer/src
-uv run basedpyright packages/apt-registry-explorer/src
+# Use poe commands for common tasks
+uv run poe format      # Format code with ruff
+uv run poe lint        # Run ruff linter
+uv run poe typecheck   # Run mypy + basedpyright
+uv run poe test        # Run all tests with coverage
+uv run poe check       # Run all quality checks
+uv run poe fix         # Auto-fix formatting and linting
+uv run poe all         # Format, lint, typecheck, and test
 
 # Run the CLI
 uv run apt-registry-explorer --help
@@ -40,6 +65,8 @@ uv run apt-registry-explorer --help
 | Language | Python | 3.11 - 3.14 |
 | Package Manager | uv (Astral) | latest |
 | Build System | hatchling + hatch-vcs | - |
+| Task Runner | poethepoet (poe) | >=0.32.0 |
+| Git Hooks | prek (Rust-based) | >=0.2.26 |
 | CLI Framework | Typer | >=0.21.0 |
 | TUI Framework | Textual | >=0.40.0 |
 | HTTP Client | httpx | >=0.27.0 |
@@ -72,7 +99,9 @@ apt-registry-explorer/
 ├── .github/workflows/
 │   ├── test.yml              # Main CI workflow
 │   └── regenerate-screenshot.yml  # TUI screenshot generator
-├── pyproject.toml            # Project configuration
+├── .pre-commit-config.yaml   # prek/pre-commit hooks configuration
+├── pyproject.toml            # Project + poe tasks configuration
+├── CLAUDE.md                 # AI assistant guide (this file)
 └── README.md                 # User documentation
 ```
 
@@ -112,46 +141,65 @@ This codebase uses Python 3.11+ features:
 ### Before Starting Work
 
 ```bash
-# Ensure dependencies are synced
-uv sync
+# First time setup (or after clone)
+uv sync && uv run prek install
 
-# Check current test status
-uv run pytest -v
+# Verify hooks are installed
+uv run prek run --all-files
 ```
 
-### Code Quality Checks (Required Before Commits)
+### Using Poe Commands (Recommended)
+
+All common tasks are available via `uv run poe <command>`:
 
 ```bash
-# 1. Format code
-uv run ruff format packages/apt-registry-explorer/src tests/
+# Formatting
+uv run poe format        # Format code with ruff
+uv run poe format-check  # Check formatting without changes
 
-# 2. Run linter
-uv run ruff check packages/apt-registry-explorer/src tests/
+# Linting
+uv run poe lint          # Run ruff linter
+uv run poe lint-fix      # Run linter with auto-fix
 
-# 3. Type check with mypy
-uv run mypy packages/apt-registry-explorer/src --show-error-codes --pretty
+# Type Checking
+uv run poe mypy          # Run mypy
+uv run poe pyright       # Run basedpyright
+uv run poe typecheck     # Run both type checkers
 
-# 4. Type check with basedpyright
-uv run basedpyright packages/apt-registry-explorer/src
+# Testing
+uv run poe test          # All tests with coverage
+uv run poe test-unit     # Unit tests only (no network)
+uv run poe test-integration  # Integration tests only
+uv run poe test-fast     # Quick tests (no coverage, stop on failure)
+
+# Combined Commands
+uv run poe check         # format-check + lint + typecheck
+uv run poe fix           # format + lint-fix
+uv run poe all           # fix + typecheck + test
+
+# Git Hooks
+uv run poe prek-install  # Install git hooks
+uv run poe prek-run      # Run all hooks on all files
+uv run poe prek-update   # Update hook versions
 ```
 
 ### Testing
 
 ```bash
 # Run all tests with coverage
-uv run pytest
+uv run poe test
 
 # Run unit tests only (faster, no network)
-uv run pytest -m "not integration"
+uv run poe test-unit
 
 # Run integration tests only (requires network)
-uv run pytest -m "integration"
+uv run poe test-integration
 
 # Run specific test file
 uv run pytest tests/test_cli.py -v
 
-# Run with more verbose output
-uv run pytest -v --tb=short
+# Quick test run (stop on first failure)
+uv run poe test-fast
 ```
 
 ### Running the Application
@@ -358,4 +406,6 @@ uv run ruff check --fix packages/apt-registry-explorer/src tests/
 | Test configuration | `pyproject.toml` `[tool.pytest.ini_options]` |
 | Ruff configuration | `pyproject.toml` `[tool.ruff]` |
 | Type checker config | `pyproject.toml` `[tool.mypy]`, `[tool.basedpyright]` |
+| Poe tasks | `pyproject.toml` `[tool.poe.tasks]` |
+| Prek/Git hooks | `.pre-commit-config.yaml` |
 | CI workflow | `.github/workflows/test.yml` |
