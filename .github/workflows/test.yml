@@ -50,51 +50,11 @@ jobs:
       run: |
         uv run basedpyright packages/apt-registry-explorer/src
   
-  # Unit tests run on Python 3.12 only
-  unit-tests:
-    name: Unit Tests (Python 3.12)
+  # All tests run on multiple Python versions with coverage
+  tests:
+    name: Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     needs: quality  # Run after quality checks pass
-    
-    steps:
-    - uses: actions/checkout@v6
-      with:
-        fetch-depth: 0  # For hatch-vcs
-    
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.12"
-    
-    - name: Install uv
-      uses: astral-sh/setup-uv@v5
-      with:
-        version: "latest"
-    
-    - name: Install dependencies
-      run: |
-        uv sync
-    
-    - name: Run unit tests
-      run: |
-        # Run unit tests (excluding integration tests)
-        # Integration tests require network access and test against real Ubuntu repos
-        uv run pytest tests/ -v -m "not integration"
-    
-    - name: Validate CLI entry points
-      run: |
-        # Validate that CLI entry points can be invoked
-        # This ONLY tests that the help system loads, NOT actual functionality
-        # NOT VALIDATED: Repository discovery, package fetching, TUI rendering
-        uv run apt-registry-explorer --help
-        uv run apt-registry-explorer query --help
-        uv run apt-registry-explorer discover --help
-  
-  # Integration tests run on multiple Python versions
-  integration-tests:
-    name: Integration Tests (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
-    needs: unit-tests  # Run after unit tests pass
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
@@ -120,9 +80,17 @@ jobs:
       run: |
         uv sync
     
-    - name: Run integration tests
+    - name: Run all tests with coverage
       run: |
-        # Run integration tests against real Ubuntu Jammy repository
-        # These tests verify: repository discovery, package fetching, metadata parsing
-        # May be slow due to network access
-        uv run pytest tests/ -v -m "integration" --tb=short
+        # Run all tests (unit + integration) with coverage calculation
+        # Integration tests access real Ubuntu Jammy repository
+        uv run pytest tests/ -v --cov=apt_registry_explorer --cov-report=term --cov-report=xml
+    
+    - name: Validate CLI entry points
+      run: |
+        # Validate that CLI entry points can be invoked
+        # This ONLY tests that the help system loads, NOT actual functionality
+        # NOT VALIDATED: Repository discovery, package fetching, TUI rendering
+        uv run apt-registry-explorer --help
+        uv run apt-registry-explorer query --help
+        uv run apt-registry-explorer discover --help
