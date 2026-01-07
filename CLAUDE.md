@@ -24,6 +24,7 @@ uv run prek install
 - This applies to all commits, including "quick fixes" or "WIP" commits
 
 If you encounter hook failures:
+
 1. Run `uv run poe fix` to auto-fix formatting/linting issues
 2. Run `uv run poe typecheck` to see type errors
 3. Run `uv run poe test-fast` to debug test failures
@@ -34,6 +35,7 @@ If you encounter hook failures:
 **Purpose:** Python utility to validate and explore APT registry endpoints without requiring apt-source configuration or root access.
 
 **Key Features:**
+
 - Interactive repository discovery and navigation
 - Terminal User Interface (TUI) for browsing packages with fzf-style search
 - CLI tools for querying packages with JSON output (similar to apt-cache)
@@ -60,20 +62,20 @@ uv run apt-registry-explorer --help
 
 ## Technology Stack
 
-| Component | Technology | Version |
-|-----------|------------|---------|
-| Language | Python | 3.11 - 3.14 |
-| Package Manager | uv (Astral) | latest |
-| Build System | hatchling + hatch-vcs | - |
-| Task Runner | poethepoet (poe) | >=0.32.0 |
-| Git Hooks | prek (Rust-based) | >=0.2.26 |
-| CLI Framework | Typer | >=0.21.0 |
-| TUI Framework | Textual | >=0.40.0 |
-| HTTP Client | httpx | >=0.27.0 |
-| Data Validation | Pydantic | >=2.0.0 |
-| Type Checking | mypy + basedpyright | strict |
-| Linting/Formatting | ruff | >=0.9.4 |
-| Testing | pytest + pytest-asyncio | - |
+| Component          | Technology              | Version     |
+| ------------------ | ----------------------- | ----------- |
+| Language           | Python                  | 3.11 - 3.14 |
+| Package Manager    | uv (Astral)             | latest      |
+| Build System       | hatchling + hatch-vcs   | -           |
+| Task Runner        | poethepoet (poe)        | >=0.32.0    |
+| Git Hooks          | prek (Rust-based)       | >=0.2.26    |
+| CLI Framework      | Typer                   | >=0.21.0    |
+| TUI Framework      | Textual                 | >=0.40.0    |
+| HTTP Client        | httpx                   | >=0.27.0    |
+| Data Validation    | Pydantic                | >=2.0.0     |
+| Type Checking      | mypy + basedpyright     | strict      |
+| Linting/Formatting | ruff                    | >=0.9.4     |
+| Testing            | pytest + pytest-asyncio | -           |
 
 ## Project Structure
 
@@ -111,16 +113,17 @@ apt-registry-explorer/
 
 The CLI module (`cli.py`) follows SOLID principles with dedicated classes:
 
-| Class | Responsibility |
-|-------|----------------|
-| `SourceParser` | Parse source formats (URLs, deb lines) |
+| Class                | Responsibility                           |
+| -------------------- | ---------------------------------------- |
+| `SourceParser`       | Parse source formats (URLs, deb lines)   |
 | `ArchitectureLister` | List and format architecture information |
-| `PackageQuerier` | Query, filter, and output packages |
-| `RepositoryExplorer` | Discover repository structure |
+| `PackageQuerier`     | Query, filter, and output packages       |
+| `RepositoryExplorer` | Discover repository structure            |
 
 ### Data Models (Pydantic)
 
 All structured data uses Pydantic `BaseModel`:
+
 - `PackageMetadata` - Package information from Packages file
 - `SourceEntry` - APT source configuration entry
 - `SourceOptions` - Source options (signed-by, arch, etc.)
@@ -129,6 +132,7 @@ All structured data uses Pydantic `BaseModel`:
 ### Modern Python Features
 
 This codebase uses Python 3.11+ features:
+
 - Built-in generics: `list[X]`, `dict[K, V]` (not `typing.List`)
 - Pipe unions: `X | None` (not `Optional[X]`)
 - Match-case statements for control flow
@@ -288,6 +292,7 @@ The `test.yml` workflow runs on push/PR to `main` and `develop`:
 ### Action Versions
 
 Always use latest major versions:
+
 - `actions/checkout@v6`
 - `actions/setup-python@v6`
 - `astral-sh/setup-uv@v5`
@@ -355,6 +360,7 @@ def test_real_api() -> None:
 ## Test Fixtures
 
 Test fixtures are located in `tests/fixtures/`:
+
 - `packages_file.txt` - Sample Packages file content
 - `release_file.txt` - Sample Release file content
 
@@ -367,6 +373,7 @@ Test fixtures are located in `tests/fixtures/`:
 ## Integration Test Repository
 
 Integration tests use Ubuntu's Jammy (22.04) repository:
+
 - URL: `http://archive.ubuntu.com/ubuntu/`
 - Suite: `jammy`
 - Components: `main`, `universe`
@@ -377,18 +384,21 @@ Integration tests use Ubuntu's Jammy (22.04) repository:
 ### Common Issues
 
 **Import errors in tests:**
+
 ```bash
 # Ensure pythonpath is set correctly
 uv run pytest --collect-only  # Check test discovery
 ```
 
 **Type checking errors:**
+
 ```bash
 # Check specific file
 uv run mypy packages/apt-registry-explorer/src/apt_registry_explorer/cli.py
 ```
 
 **Formatting issues:**
+
 ```bash
 # Auto-fix with ruff
 uv run ruff format packages/apt-registry-explorer/src tests/
@@ -397,15 +407,15 @@ uv run ruff check --fix packages/apt-registry-explorer/src tests/
 
 ## File Locations Quick Reference
 
-| What | Where |
-|------|-------|
-| Main CLI entry | `packages/.../cli.py` |
-| Pydantic models | `packages/.../packages.py`, `packages/.../sources.py` |
-| TUI application | `packages/.../tui.py` |
-| TUI styles | `packages/.../tui.tcss` |
-| Test configuration | `pyproject.toml` `[tool.pytest.ini_options]` |
-| Ruff configuration | `pyproject.toml` `[tool.ruff]` |
+| What                | Where                                                 |
+| ------------------- | ----------------------------------------------------- |
+| Main CLI entry      | `packages/.../cli.py`                                 |
+| Pydantic models     | `packages/.../packages.py`, `packages/.../sources.py` |
+| TUI application     | `packages/.../tui.py`                                 |
+| TUI styles          | `packages/.../tui.tcss`                               |
+| Test configuration  | `pyproject.toml` `[tool.pytest.ini_options]`          |
+| Ruff configuration  | `pyproject.toml` `[tool.ruff]`                        |
 | Type checker config | `pyproject.toml` `[tool.mypy]`, `[tool.basedpyright]` |
-| Poe tasks | `pyproject.toml` `[tool.poe.tasks]` |
-| Prek/Git hooks | `.pre-commit-config.yaml` |
-| CI workflow | `.github/workflows/test.yml` |
+| Poe tasks           | `pyproject.toml` `[tool.poe.tasks]`                   |
+| Prek/Git hooks      | `.pre-commit-config.yaml`                             |
+| CI workflow         | `.github/workflows/test.yml`                          |

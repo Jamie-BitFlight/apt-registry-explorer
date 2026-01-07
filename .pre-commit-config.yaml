@@ -113,5 +113,5 @@ ci:
   autofix_commit_msg: "style: auto-fix by prek hooks"
   autoupdate_commit_msg: "chore: update prek hooks"
   skip:
-    - pytest  # Tests run separately in CI
-    - basedpyright  # Run in dedicated CI job
+    - pytest # Tests run separately in CI
+    - basedpyright # Run in dedicated CI job

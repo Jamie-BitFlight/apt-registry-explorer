@@ -124,18 +124,22 @@ class TestRepositoryDiscoveryEdgeCases:
             result = discovery.get_components("https://example.com/Release")
             assert result == []
 
-    @patch("httpx.get")
-    def test_list_directory_handles_http_errors(self, mock_get) -> None:  # noqa: PLR6301
-        """Test that list_directory handles HTTP errors gracefully."""
+    def test_list_directory_handles_http_errors(self) -> None:  # noqa: PLR6301
+        """Test that list_directory raises ValueError on HTTP errors."""
         discovery = RepositoryDiscovery("https://example.com")
 
         mock_response = MagicMock()
         mock_response.status_code = 500
-        mock_get.return_value = mock_response
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Server error", request=MagicMock(), response=mock_response
+        )
 
-        result = discovery.list_directory("https://example.com")
-
-        assert result == []
+        # Mock the client's get method
+        with (
+            patch.object(discovery.client, "get", return_value=mock_response),
+            pytest.raises(ValueError, match=r"Failed to list directory"),
+        ):
+            discovery.list_directory("https://example.com")
 
 
 class TestPackageIndexEdgeCases:
