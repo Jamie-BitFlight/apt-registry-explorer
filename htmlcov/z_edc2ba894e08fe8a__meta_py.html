@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for packages/apt-registry-explorer/src/apt_registry_explorer/__init__.py: 100%</title>
+    <title>Coverage for packages/apt-registry-explorer/src/apt_registry_explorer/_meta.py: 60%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_9ff733b0.css" type="text/css">
     <script src="coverage_html_cb_dd2e7eb5.js" defer></script>
@@ -11,8 +11,8 @@
 <header>
     <div class="content">
         <h1>
-            <span class="text">Coverage for </span><b>packages&#8201;/&#8201;apt-registry-explorer&#8201;/&#8201;src&#8201;/&#8201;apt_registry_explorer&#8201;/&#8201;__init__.py</b>:
-            <span class="pc_cov">100%</span>
+            <span class="text">Coverage for </span><b>packages&#8201;/&#8201;apt-registry-explorer&#8201;/&#8201;src&#8201;/&#8201;apt_registry_explorer&#8201;/&#8201;_meta.py</b>:
+            <span class="pc_cov">60%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -54,15 +54,15 @@
             </div>
         </aside>
         <h2>
-            <span class="text">3 statements &nbsp;</span>
+            <span class="text">5 statements &nbsp;</span>
             <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">3<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">2<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
-            <a id="prevFileLink" class="nav" href="index.html">&#xab; prev</a> &nbsp; &nbsp;
+            <a id="prevFileLink" class="nav" href="z_edc2ba894e08fe8a___init___py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a id="nextFileLink" class="nav" href="z_edc2ba894e08fe8a__meta_py.html">&#xbb; next</a>
+            <a id="nextFileLink" class="nav" href="z_edc2ba894e08fe8a_cli_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
             created at 2026-02-22 02:42 +0000
@@ -80,19 +80,21 @@
     </div>
 </header>
 <main id="source">
-    <p class="pln"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="str">"""apt-registry-explorer - A utility to explore APT repositories without needing apt-source setup or root access."""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="str">"""Package version metadata."""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="key">from</span> <span class="op">.</span> <span class="key">import</span> <span class="nam">cli</span><span class="op">,</span> <span class="nam">discovery</span><span class="op">,</span> <span class="nam">packages</span><span class="op">,</span> <span class="nam">sources</span><span class="op">,</span> <span class="nam">tui</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">_meta</span> <span class="key">import</span> <span class="nam">__version__</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t"><span class="nam">__all__</span> <span class="op">=</span> <span class="op">[</span><span class="str">"__version__"</span><span class="op">,</span> <span class="str">"cli"</span><span class="op">,</span> <span class="str">"discovery"</span><span class="op">,</span> <span class="str">"packages"</span><span class="op">,</span> <span class="str">"sources"</span><span class="op">,</span> <span class="str">"tui"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="nam">__all__</span> <span class="op">=</span> <span class="op">[</span><span class="str">"__version__"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t5" href="#t5">5</a></span><span class="t"><span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t6" href="#t6">6</a></span><span class="t">    <span class="key">from</span> <span class="op">.</span><span class="nam">_version</span> <span class="key">import</span> <span class="nam">version</span> <span class="key">as</span> <span class="nam">__version__</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t7" href="#t7">7</a></span><span class="t"><span class="key">except</span> <span class="nam">ImportError</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t8" href="#t8">8</a></span><span class="t">    <span class="nam">__version__</span> <span class="op">=</span> <span class="str">"0.0.0+unknown"</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
         <p>
-            <a class="nav" href="index.html">&#xab; prev</a> &nbsp; &nbsp;
+            <a class="nav" href="z_edc2ba894e08fe8a___init___py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a class="nav" href="z_edc2ba894e08fe8a__meta_py.html">&#xbb; next</a>
+            <a class="nav" href="z_edc2ba894e08fe8a_cli_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.1">coverage.py v7.13.1</a>,
             created at 2026-02-22 02:42 +0000

@@ -4,13 +4,14 @@
 
 | Name                                                                       |    Stmts |     Miss |   Cover |   Missing |
 |--------------------------------------------------------------------------- | -------: | -------: | ------: | --------: |
-| packages/apt-registry-explorer/src/apt\_registry\_explorer/\_\_init\_\_.py |        6 |        2 |     67% |      9-10 |
-| packages/apt-registry-explorer/src/apt\_registry\_explorer/cli.py          |      159 |        5 |     97% |199, 242, 259, 277, 319 |
+| packages/apt-registry-explorer/src/apt\_registry\_explorer/\_\_init\_\_.py |        3 |        0 |    100% |           |
+| packages/apt-registry-explorer/src/apt\_registry\_explorer/\_meta.py       |        5 |        2 |     60% |       7-8 |
+| packages/apt-registry-explorer/src/apt\_registry\_explorer/cli.py          |      170 |        4 |     98% |247, 264, 282, 344 |
 | packages/apt-registry-explorer/src/apt\_registry\_explorer/discovery.py    |       82 |       24 |     71% |36-67, 97, 157-158, 183-184 |
-| packages/apt-registry-explorer/src/apt\_registry\_explorer/packages.py     |      118 |       19 |     84% |75-99, 132, 172, 238-239 |
+| packages/apt-registry-explorer/src/apt\_registry\_explorer/packages.py     |      118 |       18 |     85% |78-102, 180, 249-250 |
 | packages/apt-registry-explorer/src/apt\_registry\_explorer/sources.py      |       93 |       10 |     89% |99-100, 103-104, 107, 128, 135, 166, 187-188 |
 | packages/apt-registry-explorer/src/apt\_registry\_explorer/tui.py          |       63 |       22 |     65% |85-97, 113-128, 142-143, 153-154 |
-| **TOTAL**                                                                  |  **521** |   **82** | **84%** |           |
+| **TOTAL**                                                                  |  **534** |   **80** | **85%** |           |
 
 
 ## Setup coverage badge
