@@ -370,3 +370,102 @@ class TestCLICommands:
             result = runner.invoke(app, ["discover", "https://example.com"])
             assert result.exit_code == 0
             assert "Exploring:" in result.output
+
+    def test_tui_browse_command_no_packages(self, mock_package_index) -> None:  # noqa: PLR6301
+        """Test tui-browse exits with error when no packages found."""
+        mock_package_index.get_all_packages.return_value = []
+
+        with patch("apt_registry_explorer.cli.PackageIndex") as mock_cls:
+            mock_cls.return_value = mock_package_index
+            runner = CliRunner()
+            result = runner.invoke(
+                app, ["tui-browse", "--source", "https://example.com", "--arch", "amd64"]
+            )
+            assert result.exit_code == 1
+            assert "No packages found" in result.output
+
+    def test_tui_browse_command_launches_tui(self, mock_package_index, sample_packages) -> None:  # noqa: PLR6301
+        """Test tui-browse launches TUI with loaded packages."""
+        mock_package_index.get_all_packages.return_value = sample_packages
+
+        with (
+            patch("apt_registry_explorer.cli.PackageIndex") as mock_cls,
+            patch("apt_registry_explorer.cli.launch_tui") as mock_launch,
+        ):
+            mock_cls.return_value = mock_package_index
+            runner = CliRunner()
+            result = runner.invoke(
+                app, ["tui-browse", "--source", "https://example.com", "--arch", "amd64"]
+            )
+            assert result.exit_code == 0
+            mock_launch.assert_called_once_with(sample_packages)
+
+    def test_tui_browse_passes_suite_from_deb_line(  # noqa: PLR6301
+        self, mock_package_index, sample_packages
+    ) -> None:
+        """Test that tui-browse passes the suite from a deb line to load_from_url."""
+        mock_package_index.get_all_packages.return_value = sample_packages
+
+        with (
+            patch("apt_registry_explorer.cli.PackageIndex") as mock_cls,
+            patch("apt_registry_explorer.cli.launch_tui"),
+        ):
+            mock_cls.return_value = mock_package_index
+            runner = CliRunner()
+            result = runner.invoke(
+                app,
+                [
+                    "tui-browse",
+                    "--source",
+                    "deb https://example.com/ubuntu jammy main",
+                    "--arch",
+                    "amd64",
+                ],
+            )
+            assert result.exit_code == 0
+            mock_package_index.load_from_url.assert_called_once_with(
+                "https://example.com/ubuntu", "amd64", "main", "jammy"
+            )
+
+
+# ===== PackageQuerier Suite Parameter Tests =====
+
+
+class TestPackageQuerierSuite:
+    """Test that suite parameter is correctly passed through PackageQuerier."""
+
+    def test_query_packages_passes_suite(self, mock_package_index, sample_packages) -> None:  # noqa: PLR6301
+        """Test that query_packages passes suite to load_from_url."""
+        mock_package_index.get_all_packages.return_value = sample_packages
+
+        PackageQuerier.query_packages(
+            "https://example.com", "amd64", "main", None, None, None, OutputFormat.JSON, "jammy"
+        )
+
+        mock_package_index.load_from_url.assert_called_once_with(
+            "https://example.com", "amd64", "main", "jammy"
+        )
+
+    def test_query_command_passes_suite_from_deb_line(  # noqa: PLR6301
+        self, mock_package_index, sample_packages
+    ) -> None:
+        """Test that the query CLI command passes suite derived from deb line."""
+        mock_package_index.get_all_packages.return_value = sample_packages
+
+        with patch("apt_registry_explorer.cli.PackageIndex") as mock_cls:
+            mock_cls.return_value = mock_package_index
+            runner = CliRunner()
+            result = runner.invoke(
+                app,
+                [
+                    "query",
+                    "--source",
+                    "deb https://example.com/ubuntu focal main",
+                    "--arch",
+                    "amd64",
+                ],
+            )
+            assert result.exit_code == 0
+            mock_package_index.load_from_url.assert_called_once_with(
+                "https://example.com/ubuntu", "amd64", "main", "focal"
+            )
