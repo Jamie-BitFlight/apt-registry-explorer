@@ -60,7 +60,7 @@ def test_fetch_ubuntu_jammy_packages() -> None:
 
     # Fetch packages from Ubuntu Jammy main repository for amd64
     # Note: This is a real HTTP request that may be slow
-    index.load_from_url("http://archive.ubuntu.com/ubuntu/", "amd64", "main")
+    index.load_from_url("http://archive.ubuntu.com/ubuntu/", "amd64", "main", "jammy")
 
     packages = index.get_all_packages()
 
@@ -92,7 +92,7 @@ def test_filter_ubuntu_python_packages() -> None:
     index = PackageIndex()
 
     # Load packages from Ubuntu
-    index.load_from_url("http://archive.ubuntu.com/ubuntu/", "amd64", "main")
+    index.load_from_url("http://archive.ubuntu.com/ubuntu/", "amd64", "main", "jammy")
 
     # Filter for python3 packages
     python_packages = index.filter_by_regex(r"^python3-")
