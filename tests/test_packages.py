@@ -2,6 +2,9 @@
 Tests for packages module.
 """
 
+from unittest.mock import MagicMock, patch
+
+import httpx
 from apt_registry_explorer.packages import PackageIndex, PackageMetadata
 
 
@@ -107,3 +110,33 @@ def test_filter_by_version():
     filtered = index.filter_by_version(">=2.0")
     assert len(filtered) == 2
     assert all(p.version >= "2.0" for p in filtered)
+
+
+def test_fetch_packages_file_uses_suite():
+    """Test that fetch_packages_file builds the URL using the provided suite."""
+    # First call (gz) raises HTTPError; second call (plain text) succeeds
+    mock_response = MagicMock()
+    mock_response.raise_for_status = MagicMock()
+    mock_response.text = ""
+
+    with patch.object(
+        httpx.Client,
+        "get",
+        side_effect=[
+            httpx.HTTPStatusError("404", request=MagicMock(), response=MagicMock()),
+            mock_response,
+        ],
+    ) as mock_get:
+        index = PackageIndex()
+        index.fetch_packages_file("https://example.com/ubuntu", "amd64", "main", "focal")
+        calls = [call.args[0] for call in mock_get.call_args_list]
+        assert all("focal" in url for url in calls)
+        assert not any("jammy" in url or "/stable/" in url for url in calls)
+
+
+def test_load_from_url_passes_suite():
+    """Test that load_from_url passes suite through to fetch_packages_file."""
+    index = PackageIndex()
+    with patch.object(index, "fetch_packages_file", return_value="") as mock_fetch:
+        index.load_from_url("https://example.com/ubuntu", "amd64", "main", "focal")
+        mock_fetch.assert_called_once_with("https://example.com/ubuntu", "amd64", "main", "focal")

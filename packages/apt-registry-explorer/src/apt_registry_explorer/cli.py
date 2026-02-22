@@ -9,6 +9,7 @@ import typer
 from .discovery import RepositoryDiscovery
 from .packages import PackageIndex, PackageMetadata
 from .sources import SourceOptions, SourcesBuilder
+from .tui import launch_tui
 
 app = typer.Typer(
     name="apt-registry-explorer",
@@ -114,6 +115,7 @@ class PackageQuerier:
         regex: str | None,
         version_spec: str | None,
         output: OutputFormat,
+        suite: str = "stable",
     ) -> None:
         """Query packages with filters and output results.
 
@@ -125,10 +127,11 @@ class PackageQuerier:
             regex: Regex pattern filter
             version_spec: Version specification filter
             output: Output format
+            suite: Distribution suite (e.g., jammy, stable)
 
         """
         index = PackageIndex()
-        index.load_from_url(repo_url, arch, component)
+        index.load_from_url(repo_url, arch, component, suite)
 
         packages = PackageQuerier._apply_filters(index, package, regex, version_spec)
         PackageQuerier._output_packages(packages, output)
@@ -196,7 +199,9 @@ def query(
         typer.echo("Error: --arch is required for package queries", err=True)
         raise typer.Exit(1)
 
-    PackageQuerier.query_packages(repo_url, arch, component, package, regex, version_spec, output)
+    PackageQuerier.query_packages(
+        repo_url, arch, component, package, regex, version_spec, output, suite
+    )
 
 
 class RepositoryExplorer:
@@ -313,6 +318,26 @@ def discover(
     """Interactively discover repository structure and generate sources configuration."""
     explorer = RepositoryExplorer(url, output_format)
     explorer.explore()
+
+
+@app.command()
+def tui_browse(
+    source: Annotated[str, typer.Option(help="Repository URL or deb line")],
+    arch: Annotated[str, typer.Option(help="Architecture to browse (e.g., amd64)")],
+    component: Annotated[str, typer.Option(help="Component to browse")] = "main",
+) -> None:
+    """Launch interactive TUI package browser."""
+    repo_url, suite = SourceParser.parse_source(source)
+
+    index = PackageIndex()
+    index.load_from_url(repo_url, arch, component, suite)
+    pkgs = index.get_all_packages()
+
+    if not pkgs:
+        typer.echo("No packages found", err=True)
+        raise typer.Exit(1)
+
+    launch_tui(pkgs)
 
 
 if __name__ == "__main__":

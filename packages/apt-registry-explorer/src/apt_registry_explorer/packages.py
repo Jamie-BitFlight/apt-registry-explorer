@@ -60,13 +60,16 @@ class PackageIndex:
         )
         self.packages: list[PackageMetadata] = []
 
-    async def fetch_packages_file_async(self, url: str, architecture: str, component: str) -> str:
+    async def fetch_packages_file_async(
+        self, url: str, architecture: str, component: str, suite: str = "stable"
+    ) -> str:
         """Fetch Packages file from repository asynchronously.
 
         Args:
             url: Base URL of repository
             architecture: Architecture (e.g., amd64)
             component: Component (e.g., main)
+            suite: Distribution suite (e.g., jammy, stable)
 
         Returns:
             Content of Packages file
@@ -77,7 +80,7 @@ class PackageIndex:
         ) as client:
             # Try compressed version first
             packages_gz_url = urljoin(
-                url, f"dists/stable/{component}/binary-{architecture}/Packages.gz"
+                url, f"dists/{suite}/{component}/binary-{architecture}/Packages.gz"
             )
 
             try:
@@ -88,7 +91,7 @@ class PackageIndex:
                 pass
 
             # Try uncompressed version
-            packages_url = urljoin(url, f"dists/stable/{component}/binary-{architecture}/Packages")
+            packages_url = urljoin(url, f"dists/{suite}/{component}/binary-{architecture}/Packages")
 
             try:
                 response = await client.get(packages_url)
@@ -98,20 +101,25 @@ class PackageIndex:
             else:
                 return response.text
 
-    def fetch_packages_file(self, url: str, architecture: str, component: str) -> str:
+    def fetch_packages_file(
+        self, url: str, architecture: str, component: str, suite: str = "stable"
+    ) -> str:
         """Fetch Packages file from repository (sync version for backwards compatibility).
 
         Args:
             url: Base URL of repository
             architecture: Architecture (e.g., amd64)
             component: Component (e.g., main)
+            suite: Distribution suite (e.g., jammy, stable)
 
         Returns:
             Content of Packages file
 
         """
         # Try compressed version first
-        packages_gz_url = urljoin(url, f"dists/jammy/{component}/binary-{architecture}/Packages.gz")
+        packages_gz_url = urljoin(
+            url, f"dists/{suite}/{component}/binary-{architecture}/Packages.gz"
+        )
 
         try:
             response = self.client.get(packages_gz_url)
@@ -121,7 +129,7 @@ class PackageIndex:
             pass
 
         # Try uncompressed version
-        packages_url = urljoin(url, f"dists/jammy/{component}/binary-{architecture}/Packages")
+        packages_url = urljoin(url, f"dists/{suite}/{component}/binary-{architecture}/Packages")
 
         try:
             response = self.client.get(packages_url)
@@ -199,16 +207,19 @@ class PackageIndex:
             sha256=pkg_dict.get("SHA256"),
         )
 
-    def load_from_url(self, url: str, architecture: str, component: str = "main") -> None:
+    def load_from_url(
+        self, url: str, architecture: str, component: str = "main", suite: str = "stable"
+    ) -> None:
         """Load packages from repository URL.
 
         Args:
             url: Repository URL
             architecture: Architecture to load
             component: Component to load
+            suite: Distribution suite (e.g., jammy, stable)
 
         """
-        content = self.fetch_packages_file(url, architecture, component)
+        content = self.fetch_packages_file(url, architecture, component, suite)
         self.packages = self.parse_packages_file(content)
 
     def filter_by_name(self, name: str) -> list[PackageMetadata]:
